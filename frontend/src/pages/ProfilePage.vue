@@ -90,7 +90,6 @@
       </form>
     </div>
 
-    <!-- Not logged in message -->
     <div v-else class="text-center mt-5">
       <p class="lead">
         Currently you are not signed in. To view your profile page, please login.
@@ -103,14 +102,25 @@
 <script lang="ts">
 import { defineComponent, reactive, ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { User, Hobby } from "../types";
+
+interface Hobby {
+  id: number;
+  name: string;
+}
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  date_of_birth: string;
+  hobbies: number[];
+}
 
 export default defineComponent({
   name: "Profile",
   setup() {
     const router = useRouter();
 
-    // State for login check, hobbies, and user data
     const isLoggedIn = ref(false);
     const hobbies = ref<Hobby[]>([]);
     const formData = reactive<User>({
@@ -121,89 +131,62 @@ export default defineComponent({
       hobbies: [],
     });
 
-    // State for password change
     const passwordData = reactive({
       oldPassword: "",
       newPassword: "",
       confirmPassword: "",
     });
 
-    // Fetch hobbies from the server
-    const fetchHobbies = async () => {
-      try {
-        const response = await fetch("/api/hobbies/");
-        if (!response.ok) throw new Error("Failed to fetch hobbies");
+    const fetchHobbies = async (): Promise<void> => {
+      const response = await fetch("/api/hobbies/");
+      if (response.ok) {
         hobbies.value = await response.json();
-      } catch (error) {
-        console.error("Error fetching hobbies:", error);
       }
     };
 
-    // Fetch user profile data from the server
-    const fetchUserProfile = async () => {
-      try {
-        const response = await fetch("/api/profile/");
-        if (response.ok) {
-          const userData: User = await response.json();
-          Object.assign(formData, userData);
-          isLoggedIn.value = true;
-        } else if (response.status === 401) {
-          isLoggedIn.value = false; // User is not authenticated
-        } else {
-          throw new Error("Failed to fetch user profile");
-        }
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
+    const fetchUserProfile = async (): Promise<void> => {
+      const response = await fetch("/api/profile/");
+      if (response.ok) {
+        const userData: User = await response.json();
+        Object.assign(formData, userData);
+        isLoggedIn.value = true;
+      } else if (response.status === 401) {
+        isLoggedIn.value = false;
       }
     };
 
-    // Submit profile update
-    const submitUpdateProfile = async () => {
-      try {
-        const response = await fetch("/api/profile/update/", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        });
-        const result = await response.json();
-        if (!result.success) throw new Error(result.errors);
-        alert("Profile updated successfully.");
-      } catch (error) {
-        console.error("Error updating profile:", error);
-        alert("Failed to update profile. Please check your input.");
+    const submitUpdateProfile = async (): Promise<void> => {
+      const response = await fetch("/api/profile/update/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const result = await response.json();
+      if (result.success) {
+        Object.assign(formData, result.data);
+        alert(result.message);
       }
     };
 
-    // Submit password update
-    const submitUpdatePassword = async () => {
-      try {
-        const response = await fetch("/api/profile/password/", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(passwordData),
-        });
-        const result = await response.json();
-        if (!result.success) throw new Error(result.errors);
-        alert("Password updated successfully.");
+    const submitUpdatePassword = async (): Promise<void> => {
+      const response = await fetch("/api/profile/password/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(passwordData),
+      });
+      const result = await response.json();
+      if (result.success) {
+        alert(result.message);
         passwordData.oldPassword = "";
         passwordData.newPassword = "";
         passwordData.confirmPassword = "";
-      } catch (error) {
-        console.error("Error updating password:", error);
-        alert("Failed to update password. Please check your input.");
       }
     };
 
-    // Navigate to the signin page
-    const goToSignin = () => {
+    const goToSignin = (): void => {
       router.push("/signin");
     };
 
-    // On component mount
     onMounted(() => {
       fetchHobbies();
       fetchUserProfile();
