@@ -32,7 +32,7 @@ def profile_api(request):
 # Update the user's profile
 @login_required
 @require_POST
-@csrf_exempt  # CSRF is exempt for simplicity; if you enable it, Fetch needs the CSRF token
+@csrf_exempt
 def update_profile_api(request):
     try:
         # Parse incoming JSON data
@@ -58,7 +58,7 @@ def update_profile_api(request):
 # Update the user's password
 @login_required
 @require_POST
-@csrf_exempt  # CSRF is exempt for simplicity; if you enable it, Fetch needs the CSRF token
+@csrf_exempt
 def update_password_api(request):
     try:
         # Parse incoming JSON data

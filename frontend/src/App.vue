@@ -10,9 +10,9 @@
             |
             <router-link
                 class=""
-                :to="{name: 'Other Page'}"
+                :to="{name: 'Profile Page'}"
             >
-                Other Page
+                Profile Page
             </router-link>
         </div>
         <RouterView class="flex-shrink-0" />
