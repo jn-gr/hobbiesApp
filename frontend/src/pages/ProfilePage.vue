@@ -148,9 +148,11 @@ export default defineComponent({
       const response = await fetch("/api/profile/");
       if (response.ok) {
         const userData: User = await response.json();
+        console.log("Fetched User Profile", userData);
         Object.assign(formData, userData);
         isLoggedIn.value = true;
       } else if (response.status === 401) {
+        console.error("Unauthorized access")
         isLoggedIn.value = false;
       }
     };
@@ -184,7 +186,7 @@ export default defineComponent({
     };
 
     const goToSignin = (): void => {
-      router.push("/signin");
+      router.push("/signup");
     };
 
     onMounted(() => {

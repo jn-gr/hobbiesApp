@@ -17,9 +17,15 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 from django.http import HttpResponse
+from .views import signup, user_login, profile_api, hobbies_api, add_hobby
 
 from .views import main_spa
 
 urlpatterns = [
     path('', main_spa),
+    path("api/signup/", signup, name="signup"),
+    path("api/login/", user_login, name="login"),
+    path("api/profile/", profile_api, name="profile_api"),
+    path("api/hobbies/", hobbies_api, name="hobbies"),
+    path("api/hobbies/add/", add_hobby, name="add_hobby"),
 ]

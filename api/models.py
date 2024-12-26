@@ -1,9 +1,19 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
 
 class Hobby(models.Model):
     name = models.CharField(max_length=255, unique=True)
+    
+    
+    # Prevents hobbies from being split up into single-letters.
+    def save(self, *args, **kwargs):
+        if len(self.name.strip()) < 2:
+            raise ValueError("Hobby must be at least two characters long.")
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
 
     def __str__(self):
         return self.name
@@ -19,16 +29,31 @@ class CustomUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
+
+
+    # Allows the existence of a superuser within the admin panel.
     def create_superuser(self, email, password=None, **extra_fields):
-        raise NotImplementedError("This application does not support superusers.")
+        extra_fields.setdefault("is_active", True)
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError("Superuser must have is_superuser=True.")
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError("Superuser must have is_staff=True.")
+
+        return self.create_user(email, password, **extra_fields)
 
 
-class CustomUser(AbstractBaseUser):
+class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=150)
     date_of_birth = models.DateField(null=True, blank=True)
     hobbies = models.ManyToManyField(Hobby, blank=True)
-    is_active = models.BooleanField(default=True)  # Allows user accounts to be deactivated
+    is_active = models.BooleanField(default=True) 
+    is_staff = models.BooleanField(default=False)  
+    is_superuser = models.BooleanField(default=False)
+    
 
     objects = CustomUserManager()
 
@@ -37,3 +62,4 @@ class CustomUser(AbstractBaseUser):
 
     def __str__(self):
         return self.email
+
