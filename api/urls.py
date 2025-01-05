@@ -1,25 +1,8 @@
-"""project URL Configuration
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/3.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 from django.http import HttpResponse
-from .views import signup, user_login, profile_api, hobbies_api, add_hobby
-
-from .views import main_spa
+from .views import signup, user_login, profile_api, hobbies_api, add_hobby, main_spa, list_friends, list_received_requests, list_sent_requests, send_friend_request, accept_friend_request, reject_friend_request
 
 urlpatterns = [
     path('', main_spa),
@@ -28,4 +11,10 @@ urlpatterns = [
     path("api/profile/", profile_api, name="profile_api"),
     path("api/hobbies/", hobbies_api, name="hobbies"),
     path("api/hobbies/add/", add_hobby, name="add_hobby"),
+    path('api/friends/', list_friends, name='list_friends'),
+    path('api/friend_requests/sent/', list_sent_requests, name='list_sent_requests'),
+    path('api/friend_requests/received/', list_received_requests, name='list_received_requests'),
+    path('api/friend_requests/send/<int:user_id>/', send_friend_request, name='send_friend_request'),
+    path('api/friend_requests/accept/<int:request_id>/', accept_friend_request, name='accept_friend_request'),
+    path('api/friend_requests/reject/<int:request_id>/', reject_friend_request, name='reject_friend_request'),
 ]

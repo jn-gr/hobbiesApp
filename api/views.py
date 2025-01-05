@@ -7,13 +7,16 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth import update_session_auth_hash, login, authenticate
 from .models import CustomUser, Hobby
 import json
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import User
-from django.contrib import messages
+from django.core.paginator import Paginator
+from django.db.models import Count, Q, F
+from datetime import date
+from django.shortcuts import get_object_or_404
+from .models import FriendRequest
 
 # Render the main SPA
 def main_spa(request: HttpRequest) -> JsonResponse:
     return render(request, 'api/spa/index.html', {})
+
 
 # Fetch the current user's profile data
 @login_required
@@ -29,6 +32,7 @@ def profile_api(request: HttpRequest) -> JsonResponse:
         }
         return JsonResponse({"success": True, "data": data})
     return JsonResponse({"success": False, "message": "Invalid request method."}, status=405)
+
 
 # Update the user's profile
 @login_required
@@ -59,6 +63,7 @@ def update_profile_api(request: HttpRequest) -> JsonResponse:
     except Exception as e:
         return JsonResponse({"success": False, "errors": str(e)}, status=400)
 
+
 # Update the user's password
 @login_required
 @require_POST
@@ -77,6 +82,7 @@ def update_password_api(request: HttpRequest) -> JsonResponse:
         return JsonResponse({'success': True, "message": "Password updated successfully."})
     except Exception as e:
         return JsonResponse({'success': False, "errors": str(e)}, status=400)
+
 
 # Fetch all hobbies
 @csrf_exempt
@@ -152,10 +158,6 @@ def signup(request):
                     hobby, created = Hobby.objects.get_or_create(name=hobby_name)
                     user.hobbies.add(hobby)
                     print(f"Hobby Added: {hobby}")
-            
-            
-            
-            
             print(f"User Created: {user}")
             
             login(request, user)
@@ -164,7 +166,6 @@ def signup(request):
             print("Exception during signup:", str(e))
             return JsonResponse({'success': False, "message": str(e)}, status=400)
     return JsonResponse({'success': False, "message": "Invalid Request."}, status=405)
-
 
 
 @csrf_exempt
@@ -193,7 +194,140 @@ def user_login(request):
     return JsonResponse({"success": False, "message": "Invalid Request."}, status=405)
 
 
-        
-            
-        
-            
+@csrf_exempt
+@login_required
+def similar_users(request):
+    current_user = request.user
+    user_hobbies = set(current_user.hobbies.values_list('id', flat=True))
+
+    # Calculate similarity scores
+    users = CustomUser.objects.exclude(id=current_user.id).annotate(
+        common_hobbies=Count('hobbies', filter=Q(hobbies__id__in=user_hobbies))
+    ).order_by('-common_hobbies')
+
+    # Pagination
+    paginator = Paginator(users, 10)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    users_data = [
+        {
+            'id': user.id,
+            'name': user.name,
+            'common_hobbies': user.hobbies,
+            'age': user.date_of_birth,
+        }
+        for user in page_obj
+    ]
+
+    return JsonResponse({'users': users_data, 'has_next': page_obj.has_next()}, safe=False)
+
+
+@csrf_exempt
+@login_required
+def similar_users(request):
+    current_user = request.user
+    user_hobbies = set(current_user.hobbies.values_list('id', flat=True))
+
+    # Calculate similarity scores based on hobbies
+    users = CustomUser.objects.exclude(id=current_user.id).annotate(
+        common_hobbies=Count('hobbies', filter=Q(hobbies__id__in=user_hobbies))
+    ).order_by('-common_hobbies')
+
+    # Age filtering
+    age_min = request.GET.get('age_min')
+    age_max = request.GET.get('age_max')
+    today = date.today()
+
+    # Add age calculation as an annotation
+    users = users.annotate(
+        age=(today.year - F('date_of_birth__year') - ((today.month, today.day) < (F('date_of_birth__month'), F('date_of_birth__day'))))
+    )
+
+    if age_min:
+        users = users.filter(age__gte=int(age_min))
+    if age_max:
+        users = users.filter(age__lte=int(age_max))
+
+    # Pagination
+    page = int(request.GET.get('page', 1))
+    per_page = 10
+    start = (page - 1) * per_page
+    end = start + per_page
+    users_paginated = users[start:end]
+    has_next = users.count() > end
+
+    # Prepare data
+    users_data = [
+        {
+            'id': user.id,
+            'name': user.name,
+            'common_hobbies': user.common_hobbies,
+            'age': user.age,
+        }
+        for user in users_paginated
+    ]
+
+    return JsonResponse({'users': users_data, 'has_next': has_next}, safe=False)
+
+
+@csrf_exempt
+@login_required
+def list_friends(request):
+    user = request.user
+    friends = user.friends.all()
+    friends_data = [{'id': friend.id, 'name': friend.name, 'email': friend.email} for friend in friends]
+    return JsonResponse({'friends': friends_data}, safe=False)
+
+
+@csrf_exempt
+@login_required
+def list_sent_requests(request):
+    user = request.user
+    sent_requests = user.get_sent_requests()
+    sent_requests_data = [
+        {'id': fr.id, 'to_user': fr.to_user.name, 'status': fr.status, 'created_at': fr.created_at}
+        for fr in sent_requests
+    ]
+    return JsonResponse({'sent_requests': sent_requests_data}, safe=False)
+
+
+@csrf_exempt
+@login_required
+def list_received_requests(request):
+    user = request.user
+    received_requests = user.get_received_requests()
+    received_requests_data = [
+        {'id': fr.id, 'from_user': fr.from_user.name, 'status': fr.status, 'created_at': fr.created_at}
+        for fr in received_requests
+    ]
+    return JsonResponse({'received_requests': received_requests_data}, safe=False)
+
+
+@csrf_exempt
+@login_required
+def send_friend_request(request, user_id):
+    to_user = get_object_or_404(CustomUser, id=user_id)
+    if FriendRequest.objects.filter(from_user=request.user, to_user=to_user, status='pending').exists():
+        return JsonResponse({'error': 'Friend request already sent!'}, status=400)
+    if request.user.is_friend(to_user):
+        return JsonResponse({'error': 'You are already friends!'}, status=400)
+    
+    FriendRequest.objects.create(from_user=request.user, to_user=to_user)
+    return JsonResponse({'message': 'Friend request sent successfully!'})
+
+
+@csrf_exempt
+@login_required
+def accept_friend_request(request, request_id):
+    friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user, status='pending')
+    friend_request.accept()
+    return JsonResponse({'message': 'Friend request accepted!'})
+
+
+@csrf_exempt
+@login_required
+def reject_friend_request(request, request_id):
+    friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user, status='pending')
+    friend_request.reject()
+    return JsonResponse({'message': 'Friend request rejected!'})
