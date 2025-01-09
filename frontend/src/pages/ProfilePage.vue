@@ -93,7 +93,7 @@
       </Card>
     </div>
 
-    <div v-else class="text-center">
+    <div v-else class="text-center min-h-[calc(100svh-124px)] flex items-center justify-center p-4 bg-background">
       <Card>
         <CardHeader>
           <CardTitle>Not Signed In</CardTitle>
