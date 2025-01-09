@@ -17,8 +17,9 @@
           >
             Home
           </router-link>
-          <router-link
-            :to="{name: 'Profile Page'}"
+          <router-link 
+            v-if="authStore.isAuthenticated"
+            :to="{name: 'Profile Page'}" 
             class="transition-colors hover:text-primary"
           >
             Profile
@@ -26,12 +27,31 @@
         </nav>
 
         <div class="flex items-center space-x-4">
-          <router-link
-            to="/login"
-            class="text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md"
-          >
-            Login
-          </router-link>
+          <template v-if="!authStore.isAuthenticated">
+            <router-link
+              to="/login"
+              class="text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md"
+            >
+              Login
+            </router-link>
+            <router-link
+              to="/signup"
+              class="text-sm font-medium transition-colors hover:text-primary"
+            >
+              Sign Up
+            </router-link>
+          </template>
+          <template v-else>
+            <span class="text-sm text-muted-foreground">
+              {{ authStore.user?.name }}
+            </span>
+            <Button 
+              variant="outline" 
+              @click="handleLogout"
+            >
+              Logout
+            </Button>
+          </template>
         </div>
       </div>
     </header>
@@ -42,13 +62,25 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
-import { RouterView } from "vue-router";
+<script setup lang="ts">
+import { onMounted } from 'vue'
+import { RouterView, useRouter } from 'vue-router'
+import { Button } from '@/components/ui/button'
+import { useAuthStore } from '@/stores/auth'
+import { toast } from 'sonner'
 
-export default defineComponent({
-  components: { RouterView },
-});
+const router = useRouter()
+const authStore = useAuthStore()
+
+async function handleLogout() {
+  await authStore.logout()
+  toast.success('Logged out successfully')
+  router.push('/login')
+}
+
+onMounted(() => {
+  authStore.checkAuth()
+})
 </script>
 
 <style scoped>
