@@ -58,6 +58,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
+// import { ref } from 'vue'
+import { useAuthStore } from '../stores/auth'
+import { useRouter } from 'vue-router'
 
 export default {
     components: {
@@ -81,21 +84,23 @@ export default {
     methods: {
         async handleLogin() {
             try {
-                const response = await fetch("http://127.0.0.1:8000/api/login/", {
-                    method: "POST", 
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify(this.form)
+                const response = await fetch('http://127.0.0.1:8000/api/login/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(this.form),
                 });
 
-                const data = await response.json();
-                if (data.success) {
-                    toast.success(data.message);
-                    setTimeout(() => this.$router.push("/"), 2000);
-                } else {
-                    toast.error(data.message || "Login failed");
+                if (response.ok) {
+                    const userData = await response.json();
+                    const authStore = useAuthStore();
+                    authStore.setUser(userData);
+                    const router = useRouter();
+                    router.push('/profile');
                 }
             } catch (error) {
-                toast.error("An error occurred during login");
+                toast.error(`Login Failed: ${error}`);
             }
         },
     },

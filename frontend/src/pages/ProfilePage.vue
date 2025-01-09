@@ -1,214 +1,235 @@
 <template>
-  <div class="container mt-5">
-    <div v-if="isLoggedIn">
-      <h1 class="mb-4">Profile</h1>
+  <div class="container mx-auto p-8 max-w-2xl">
+    <div v-if="authStore.isAuthenticated">
+      <Card>
+        <CardHeader>
+          <CardTitle>Profile Settings</CardTitle>
+          <CardDescription>
+            Manage your account settings and preferences here.
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent>
+          <form @submit.prevent="submitUpdateProfile" class="space-y-6">
+            <div class="space-y-2">
+              <Label for="name">Name</Label>
+              <Input
+                id="name"
+                v-model="formData.name"
+                placeholder="Enter your name"
+              />
+            </div>
 
-      <form @submit.prevent="submitUpdateProfile" class="mb-5">
-        <div class="mb-3">
-          <label for="name" class="form-label">Name:</label>
-          <input
-            type="text"
-            id="name"
-            class="form-control"
-            v-model="formData.name"
-          />
-        </div>
+            <div class="space-y-2">
+              <Label for="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                v-model="formData.email"
+                placeholder="Enter your email"
+              />
+            </div>
 
-        <div class="mb-3">
-          <label for="email" class="form-label">Email:</label>
-          <input
-            type="email"
-            id="email"
-            class="form-control"
-            v-model="formData.email"
-          />
-        </div>
+            <div class="space-y-2">
+              <Label for="dob">Date of Birth</Label>
+              <Input
+                id="dob"
+                type="date"
+                v-model="formData.date_of_birth"
+              />
+            </div>
 
-        <div class="mb-3">
-          <label for="dob" class="form-label">Date of Birth:</label>
-          <input
-            type="date"
-            id="dob"
-            class="form-control"
-            v-model="formData.date_of_birth"
-          />
-        </div>
+            <Button type="submit">Update Profile</Button>
+          </form>
+        </CardContent>
+      </Card>
 
-        <div class="mb-3">
-          <label for="hobbies" class="form-label">Hobbies:</label>
-          <select
-            id="hobbies"
-            class="form-select"
-            multiple
-            v-model="formData.hobbies"
-          >
-            <option v-for="hobby in hobbies" :key="hobby.id" :value="hobby.id">
-              {{ hobby.name }}
-            </option>
-          </select>
-          <small class="text-muted"
-            >Hold Ctrl or Cmd to select multiple options.</small
-          >
-        </div>
+      <Card class="mt-8">
+        <CardHeader>
+          <CardTitle>Change Password</CardTitle>
+          <CardDescription>
+            Update your password here. Please enter your current password to confirm changes.
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent>
+          <form @submit.prevent="submitUpdatePassword" class="space-y-6">
+            <div class="space-y-2">
+              <Label for="oldPassword">Current Password</Label>
+              <Input
+                id="oldPassword"
+                type="password"
+                v-model="passwordData.oldPassword"
+                placeholder="Enter current password"
+              />
+            </div>
 
-        <button type="submit" class="btn btn-primary">Update Profile</button>
-      </form>
+            <div class="space-y-2">
+              <Label for="newPassword">New Password</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                v-model="passwordData.newPassword"
+                placeholder="Enter new password"
+              />
+            </div>
 
-      <h2 class="mb-4">Change Password</h2>
-      <form @submit.prevent="submitUpdatePassword">
-        <div class="mb-3">
-          <label for="oldPassword" class="form-label">Old Password:</label>
-          <input
-            type="password"
-            id="oldPassword"
-            class="form-control"
-            v-model="passwordData.oldPassword"
-          />
-        </div>
+            <div class="space-y-2">
+              <Label for="confirmPassword">Confirm New Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                v-model="passwordData.confirmPassword"
+                placeholder="Confirm new password"
+              />
+            </div>
 
-        <div class="mb-3">
-          <label for="newPassword" class="form-label">New Password:</label>
-          <input
-            type="password"
-            id="newPassword"
-            class="form-control"
-            v-model="passwordData.newPassword"
-          />
-        </div>
-
-        <div class="mb-3">
-          <label for="confirmPassword" class="form-label">Confirm Password:</label>
-          <input
-            type="password"
-            id="confirmPassword"
-            class="form-control"
-            v-model="passwordData.confirmPassword"
-          />
-        </div>
-
-        <button type="submit" class="btn btn-danger">Change Password</button>
-      </form>
+            <Button type="submit" variant="destructive">
+              Change Password
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
 
-    <div v-else class="text-center mt-5">
-      <p class="lead">
-        Currently you are not signed in. To view your profile page, please login.
-      </p>
-      <button class="btn btn-primary" @click="goToSignin">Go to Sign In</button>
+    <div v-else class="text-center">
+      <Card>
+        <CardHeader>
+          <CardTitle>Not Signed In</CardTitle>
+          <CardDescription>
+            Please sign in to view and edit your profile.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button @click="goToSignin">Go to Sign In</Button>
+        </CardContent>
+      </Card>
     </div>
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, reactive, ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
+<script setup lang="ts">
+import { reactive, ref, onMounted } from "vue"
+import { useRouter } from "vue-router"
+import { useAuthStore } from "../stores/auth"
+import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
 interface Hobby {
-  id: number;
-  name: string;
+  id: number
+  name: string
 }
 
 interface User {
-  id: number;
-  name: string;
-  email: string;
-  date_of_birth: string;
-  hobbies: number[];
+  id: number
+  name: string
+  email: string
+  date_of_birth: string
+  hobbies: number[]
 }
 
-export default defineComponent({
-  name: "Profile",
-  setup() {
-    const router = useRouter();
+const router = useRouter()
+const authStore = useAuthStore()
+const hobbies = ref<Hobby[]>([])
 
-    const isLoggedIn = ref(false);
-    const hobbies = ref<Hobby[]>([]);
-    const formData = reactive<User>({
-      id: 0,
-      name: "",
-      email: "",
-      date_of_birth: "",
-      hobbies: [],
-    });
+const formData = reactive<User>({
+  id: 0,
+  name: "",
+  email: "",
+  date_of_birth: "",
+  hobbies: [],
+})
 
-    const passwordData = reactive({
-      oldPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
+const passwordData = reactive({
+  oldPassword: "",
+  newPassword: "",
+  confirmPassword: "",
+})
 
-    const fetchHobbies = async (): Promise<void> => {
-      const response = await fetch("/api/hobbies/");
-      if (response.ok) {
-        hobbies.value = await response.json();
+const fetchHobbies = async (): Promise<void> => {
+  try {
+    const response = await fetch("http://127.0.0.1:8000/api/hobbies/")
+    if (response.ok) {
+      hobbies.value = await response.json()
+    }
+  } catch (error) {
+    toast.error("Failed to fetch hobbies")
+  }
+}
+
+const fetchUserProfile = async (): Promise<void> => {
+  try {
+    const response = await fetch("http://127.0.0.1:8000/api/profile/")
+    if (response.ok) {
+      const userData = await response.json()
+      if (userData.success) {
+        Object.assign(formData, userData.data)
+        authStore.setUser(userData.data)
       }
-    };
+    }
+  } catch (error) {
+    toast.error("Failed to fetch profile")
+  }
+}
 
-    const fetchUserProfile = async (): Promise<void> => {
-      const response = await fetch("/api/profile/");
-      if (response.ok) {
-        const userData: User = await response.json();
-        console.log("Fetched User Profile", userData);
-        Object.assign(formData, userData);
-        isLoggedIn.value = true;
-      } else if (response.status === 401) {
-        console.error("Unauthorized access")
-        isLoggedIn.value = false;
-      }
-    };
+const submitUpdateProfile = async (): Promise<void> => {
+  try {
+    const response = await fetch("http://127.0.0.1:8000/api/profile/update/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    })
+    const result = await response.json()
+    if (result.success) {
+      Object.assign(formData, result.data)
+      authStore.setUser(result.data)
+      toast.success(result.message)
+    } else {
+      toast.error(result.message)
+    }
+  } catch (error) {
+    toast.error("Failed to update profile")
+  }
+}
 
-    const submitUpdateProfile = async (): Promise<void> => {
-      const response = await fetch("/api/profile/update/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      const result = await response.json();
-      if (result.success) {
-        Object.assign(formData, result.data);
-        alert(result.message);
-      }
-    };
+const submitUpdatePassword = async (): Promise<void> => {
+  try {
+    const response = await fetch("http://127.0.0.1:8000/api/profile/password/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(passwordData),
+    })
+    const result = await response.json()
+    if (result.success) {
+      toast.success(result.message)
+      passwordData.oldPassword = ""
+      passwordData.newPassword = ""
+      passwordData.confirmPassword = ""
+    } else {
+      toast.error(result.message)
+    }
+  } catch (error) {
+    toast.error("Failed to update password")
+  }
+}
 
-    const submitUpdatePassword = async (): Promise<void> => {
-      const response = await fetch("/api/profile/password/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(passwordData),
-      });
-      const result = await response.json();
-      if (result.success) {
-        alert(result.message);
-        passwordData.oldPassword = "";
-        passwordData.newPassword = "";
-        passwordData.confirmPassword = "";
-      }
-    };
+const goToSignin = (): void => {
+  router.push("/login")
+}
 
-    const goToSignin = (): void => {
-      router.push("/signup");
-    };
-
-    onMounted(() => {
-      fetchHobbies();
-      fetchUserProfile();
-    });
-
-    return {
-      isLoggedIn,
-      formData,
-      passwordData,
-      hobbies,
-      submitUpdateProfile,
-      submitUpdatePassword,
-      goToSignin,
-    };
-  },
-});
+onMounted(() => {
+  fetchHobbies()
+  if (authStore.isAuthenticated) {
+    fetchUserProfile()
+  }
+})
 </script>
-
-<style scoped>
-.container {
-  max-width: 600px;
-}
-</style>
