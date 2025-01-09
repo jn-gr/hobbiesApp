@@ -131,41 +131,65 @@ def signup(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            print(f"Signup Data Received: {data}")
             
-             
             name = data.get('name')
             email = data.get('email')
             password = data.get('password')
-            hobbies = data.get('hobbies', [])
+            hobbies = [hobby.get('name') for hobby in data.get('hobbies', [])]
             
-            print(f"Signup Attempt - Name: {name}, Email: {email}, Password: {password}, Hobbies: {hobbies}")
-            
+            if not all([name, email, password]):
+                return JsonResponse({
+                    'success': False, 
+                    "message": "Name, email, and password are required."
+                }, status=400)
             
             if not hobbies:
-                return JsonResponse({'success': False, "message": "Please enter at least one hobby."}, status = 400 )
+                return JsonResponse({
+                    'success': False, 
+                    "message": "Please enter at least one hobby."
+                }, status=400)
             
             if CustomUser.objects.filter(email=email).exists():
-                return JsonResponse({'success': False, "message": "Email already in use."}, status=400)
+                return JsonResponse({
+                    'success': False, 
+                    "message": "Email already in use."
+                }, status=400)
             
-
-            user = CustomUser.objects.create_user(email=email, name=name, password=password)
-            user.save()
+            # Create user
+            user = CustomUser.objects.create_user(
+                email=email,
+                name=name,
+                password=password
+            )
             
+            # Add hobbies
             for hobby_name in hobbies:
-                hobby_name = hobby_name.strip()  # Clean up whitespace
-                if hobby_name:  # Ignore empty strings
-                    hobby, created = Hobby.objects.get_or_create(name=hobby_name)
+                hobby_name = hobby_name.strip()
+                if hobby_name:
+                    hobby, _ = Hobby.objects.get_or_create(name=hobby_name)
                     user.hobbies.add(hobby)
-                    print(f"Hobby Added: {hobby}")
-            print(f"User Created: {user}")
             
             login(request, user)
-            return JsonResponse({'success': True, "message": "Successful Sign Up"})
+            return JsonResponse({
+                'success': True, 
+                "message": "Successful Sign Up"
+            })
+            
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'success': False, 
+                "message": "Invalid JSON data."
+            }, status=400)
         except Exception as e:
-            print("Exception during signup:", str(e))
-            return JsonResponse({'success': False, "message": str(e)}, status=400)
-    return JsonResponse({'success': False, "message": "Invalid Request."}, status=405)
+            return JsonResponse({
+                'success': False, 
+                "message": str(e)
+            }, status=400)
+            
+    return JsonResponse({
+        'success': False, 
+        "message": "Invalid Request Method."
+    }, status=405)
 
 
 @csrf_exempt
@@ -187,7 +211,7 @@ def user_login(request):
                 print(f"Login Successful for: {user}")
                 return JsonResponse({"success": True, "message": "Successful Login."})
             print("Authentication Failed")
-            return JsonResponse({"success": False, "message": "Cannot Authenticate User"}, status=400)
+            return JsonResponse({"success": False, "message": "Cannot Authenticate User"}, status=403)
         except Exception as e:
             print("Exception during login:", str(e)) 
             return JsonResponse({"success": False, "message": str(e)}, status=400)
