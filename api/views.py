@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from django.contrib.auth import update_session_auth_hash, login, authenticate
+from django.contrib.auth import update_session_auth_hash, login, authenticate, logout
 from .models import CustomUser, Hobby
 import json
 from django.core.paginator import Paginator
@@ -12,6 +12,7 @@ from django.db.models import Count, Q, F
 from datetime import date
 from django.shortcuts import get_object_or_404
 from .models import FriendRequest
+from typing import List, TypedDict
 
 # Render the main SPA
 def main_spa(request: HttpRequest) -> JsonResponse:
@@ -125,6 +126,9 @@ def add_hobby(request):
             return JsonResponse({"success": False, "message": str(e)}, status=400)
     return JsonResponse({"success": False, "message": "Invalid Request."}, status=405)
 
+class Hobby(TypedDict):
+    id: int
+    name: str
 
 @csrf_exempt
 def signup(request):
@@ -132,10 +136,10 @@ def signup(request):
         try:
             data = json.loads(request.body)
             
-            name = data.get('name')
-            email = data.get('email')
-            password = data.get('password')
-            hobbies = [hobby.get('name') for hobby in data.get('hobbies', [])]
+            name: str = data.get('name')
+            email: str = data.get('email')
+            password: str = data.get('password')
+            hobbies: List[Hobby] = [hobby.get('name') for hobby in data.get('hobbies', [])]
             
             if not all([name, email, password]):
                 return JsonResponse({
@@ -355,3 +359,17 @@ def reject_friend_request(request, request_id):
     friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user, status='pending')
     friend_request.reject()
     return JsonResponse({'message': 'Friend request rejected!'})
+
+
+@csrf_exempt
+def user_logout(request: HttpRequest) -> JsonResponse:
+    if request.method == "POST":
+        logout(request)
+        return JsonResponse({
+            "success": True,
+            "message": "Logged out successfully"
+        })
+    return JsonResponse({
+        "success": False,
+        "message": "Invalid request method"
+    }, status=405)

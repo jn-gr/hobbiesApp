@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 from django.http import HttpResponse
-from .views import signup, user_login, profile_api, hobbies_api, add_hobby, main_spa, list_friends, list_received_requests, list_sent_requests, send_friend_request, accept_friend_request, reject_friend_request
+from .views import signup, user_login, profile_api, hobbies_api, add_hobby, main_spa, list_friends, list_received_requests, list_sent_requests, send_friend_request, accept_friend_request, reject_friend_request, user_logout
 
 urlpatterns = [
     path('', main_spa),
@@ -17,4 +17,5 @@ urlpatterns = [
     path('api/friend_requests/send/<int:user_id>/', send_friend_request, name='send_friend_request'),
     path('api/friend_requests/accept/<int:request_id>/', accept_friend_request, name='accept_friend_request'),
     path('api/friend_requests/reject/<int:request_id>/', reject_friend_request, name='reject_friend_request'),
+    path("api/logout/", user_logout, name="logout"),
 ]
