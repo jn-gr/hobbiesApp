@@ -1,22 +1,45 @@
 <template>
-    <main class="container pt-4">
-        <div>
-            <router-link
-                class=""
-                :to="{name: 'Main Page'}"
-            >
-                Main Page
-            </router-link>
-            |
-            <router-link
-                class=""
-                :to="{name: 'Profile Page'}"
-            >
-                Profile Page
-            </router-link>
+  <div class="min-h-screen flex flex-col">
+    <header class="border-b">
+      <div class="container flex h-14 items-center px-4">
+        <router-link to="/" class="flex items-center">
+          <img 
+            src="/logo.png" 
+            alt="Logo" 
+            class="h-12 w-auto"
+          />
+        </router-link>
+
+        <nav class="flex-1 flex justify-center items-center space-x-6 text-sm font-medium">
+          <router-link
+            to="/"
+            class="transition-colors hover:text-primary"
+          >
+            Home
+          </router-link>
+          <router-link
+            :to="{name: 'Profile Page'}"
+            class="transition-colors hover:text-primary"
+          >
+            Profile
+          </router-link>
+        </nav>
+
+        <div class="flex items-center space-x-4">
+          <router-link
+            to="/login"
+            class="text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md"
+          >
+            Login
+          </router-link>
         </div>
-        <RouterView class="flex-shrink-0" />
+      </div>
+    </header>
+
+    <main class="flex-1">
+      <RouterView />
     </main>
+  </div>
 </template>
 
 <script lang="ts">
@@ -24,9 +47,8 @@ import { defineComponent } from "vue";
 import { RouterView } from "vue-router";
 
 export default defineComponent({
-    components: { RouterView },
+  components: { RouterView },
 });
-
 </script>
 
 <style scoped>
