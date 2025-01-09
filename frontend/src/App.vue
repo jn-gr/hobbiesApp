@@ -27,10 +27,22 @@
 
         <div class="flex items-center space-x-4">
           <router-link
+            v-if="!authStore.isAuthenticated"
             to="/login"
             class="text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md"
           >
             Login
+          </router-link>
+          <router-link
+            v-else
+            to="/profile"
+            class="text-sm font-medium rounded-full"
+          >
+            <img
+                :src="avatarUrl"
+                alt="User Avatar"
+                class="size-8 rounded-full"
+            />
           </router-link>
         </div>
       </div>
@@ -51,6 +63,9 @@ export default defineComponent({
   components: { RouterView },
   setup() {
     const authStore = useAuthStore()
+    console.log(authStore.user, 'authStore.user')
+
+    const avatarUrl = `https://ui-avatars.com/api/?background=9F7AEA&length=1&color=fff&name=${encodeURIComponent(authStore.user?.email || 'test')}`
 
     const handleLogout = async () => {
       try {
@@ -74,7 +89,8 @@ export default defineComponent({
 
     return {
       authStore,
-      handleLogout
+      handleLogout,
+      avatarUrl
     }
   }
 });

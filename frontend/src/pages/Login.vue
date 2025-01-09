@@ -52,57 +52,47 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+import { reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-// import { ref } from 'vue'
-import { useAuthStore } from '../stores/auth'
-import { useRouter } from 'vue-router'
 
-export default {
-    components: {
-      Button,
-      Card,
-      CardContent,
-      CardDescription,
-      CardHeader,
-      CardTitle,
-      Input,
-      Label,
-    },
-    data() {
-        return {
-            form: {
-                email: "", 
-                password: "",
-            }
-        };
-    },
-    methods: {
-        async handleLogin() {
-            try {
-                const response = await fetch('http://127.0.0.1:8000/api/login/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(this.form),
-                });
+const router = useRouter()
+const authStore = useAuthStore()
 
-                if (response.ok) {
-                    const userData = await response.json();
-                    const authStore = useAuthStore();
-                    authStore.setUser(userData);
-                    const router = useRouter();
-                    router.push('/profile');
-                }
-            } catch (error) {
-                toast.error(`Login Failed: ${error}`);
-            }
-        },
-    },
-};
+const form = reactive({
+    email: "",
+    password: "",
+})
+
+const handleLogin = async () => {
+    try {
+        const response = await fetch('http://127.0.0.1:8000/api/login/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(form),
+        });
+
+        const data = await response.json()
+        console.log('Login response:', data)
+
+        if (data.success && data.user) {
+            authStore.setUser(data.user)
+            toast.success(data.message)
+            router.push('/profile')
+        } else {
+            toast.error(data.message || 'Login failed')
+        }
+    } catch (error) {
+        console.error('Login error:', error)
+        toast.error(`Login Failed: ${error}`)
+    }
+}
 </script>

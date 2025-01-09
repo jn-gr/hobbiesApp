@@ -1,10 +1,14 @@
 import { defineStore } from 'pinia'
 
 interface User {
-  email: string;
-  name: string;
-  date_of_birth: string;
-  hobbies: string[];
+  id: number
+  email: string
+  name: string
+  date_of_birth: string
+  hobbies: Array<{
+    id: number
+    name: string
+  }>
 }
 
 export const useAuthStore = defineStore('auth', {
@@ -15,13 +19,14 @@ export const useAuthStore = defineStore('auth', {
   
   actions: {
     setUser(userData: User) {
-      this.user = userData;
-      this.isAuthenticated = true;
+      console.log('Setting user:', userData)
+      this.user = userData
+      this.isAuthenticated = true
     },
     
     logout() {
-      this.user = null;
-      this.isAuthenticated = false;
+      this.user = null
+      this.isAuthenticated = false
     }
   }
 }) 

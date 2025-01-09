@@ -16,7 +16,7 @@
               <Input
                 id="name"
                 v-model="formData.name"
-                placeholder="Enter your name"
+                :placeholder="authStore.user?.name || 'Enter your name'"
               />
             </div>
 
@@ -26,7 +26,7 @@
                 id="email"
                 type="email"
                 v-model="formData.email"
-                placeholder="Enter your email"
+                :placeholder="authStore.user?.email || 'Enter your email'"
               />
             </div>
 
@@ -35,6 +35,7 @@
               <Input
                 id="dob"
                 type="date"
+                :value="authStore.user?.date_of_birth || ''"
                 v-model="formData.date_of_birth"
               />
             </div>
@@ -168,7 +169,9 @@ const fetchHobbies = async (): Promise<void> => {
 
 const fetchUserProfile = async (): Promise<void> => {
   try {
-    const response = await fetch("http://127.0.0.1:8000/api/profile/")
+    const response = await fetch("http://127.0.0.1:8000/api/profile/", {
+      credentials: 'include'
+    })
     if (response.ok) {
       const userData = await response.json()
       if (userData.success) {
@@ -187,6 +190,7 @@ const submitUpdateProfile = async (): Promise<void> => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
+      credentials: 'include'
     })
     const result = await response.json()
     if (result.success) {
@@ -207,6 +211,7 @@ const submitUpdatePassword = async (): Promise<void> => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(passwordData),
+      credentials: 'include'
     })
     const result = await response.json()
     if (result.success) {

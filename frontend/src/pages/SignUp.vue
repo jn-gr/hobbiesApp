@@ -222,12 +222,12 @@ export default {
                 const data = await response.json();
 
                 if (data.success) {
-                    // Set user data in Pinia store
                     this.authStore.setUser({
+                        id: data.user.id,
                         email: this.formData.email,
                         name: this.formData.name,
-                        date_of_birth: "", // This will be set later in profile
-                        hobbies: this.selectedHobbies.map(h => h.name)
+                        date_of_birth: "",
+                        hobbies: this.selectedHobbies
                     });
                     
                     toast.success(data.message);
@@ -260,7 +260,6 @@ export default {
                         const newHobbyData = await response.json()
                         this.selectedHobbies.push(newHobbyData)
                         this.newHobby = ""
-                        // Refresh available hobbies
                         await this.fetchAvailableHobbies()
                     } else {
                         toast.error("Failed to add hobby")
@@ -275,6 +274,8 @@ export default {
         }
     },
     mounted() {
+        console.log(this.authStore.isAuthenticated);
+        this.authStore.isAuthenticated ? this.router.push("/profile") :
         this.fetchAvailableHobbies();
     },
 };
