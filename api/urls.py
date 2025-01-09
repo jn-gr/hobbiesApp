@@ -1,8 +1,5 @@
-from django.conf import settings
-from django.contrib import admin
 from django.urls import include, path
-from django.http import HttpResponse
-from .views import signup, user_login, profile_api, hobbies_api, add_hobby, main_spa, list_friends, list_received_requests, list_sent_requests, send_friend_request, accept_friend_request, reject_friend_request, user_logout
+from .views import signup, user_login, user_logout, profile_api, hobbies_api, add_hobby, main_spa, list_friends, list_received_requests, list_sent_requests, send_friend_request, accept_friend_request, reject_friend_request
 
 urlpatterns = [
     path('', main_spa),

@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from django.contrib.auth import update_session_auth_hash, login, authenticate, logout
+from django.contrib.auth import update_session_auth_hash, login, logout, authenticate
 from .models import CustomUser, Hobby
 import json
 from django.core.paginator import Paginator
@@ -126,7 +126,7 @@ def add_hobby(request):
             return JsonResponse({"success": False, "message": str(e)}, status=400)
     return JsonResponse({"success": False, "message": "Invalid Request."}, status=405)
 
-class Hobby(TypedDict):
+class HobbyDict(TypedDict):
     id: int
     name: str
 
@@ -139,7 +139,8 @@ def signup(request):
             name: str = data.get('name')
             email: str = data.get('email')
             password: str = data.get('password')
-            hobbies: List[Hobby] = [hobby.get('name') for hobby in data.get('hobbies', [])]
+            hobbies: List[HobbyDict] = data.get('hobbies', [])
+            hobby_names: List[str] = [hobby.get('name') for hobby in hobbies]
             
             if not all([name, email, password]):
                 return JsonResponse({
@@ -147,7 +148,7 @@ def signup(request):
                     "message": "Name, email, and password are required."
                 }, status=400)
             
-            if not hobbies:
+            if not hobby_names:
                 return JsonResponse({
                     'success': False, 
                     "message": "Please enter at least one hobby."
@@ -167,7 +168,7 @@ def signup(request):
             )
             
             # Add hobbies
-            for hobby_name in hobbies:
+            for hobby_name in hobby_names:
                 hobby_name = hobby_name.strip()
                 if hobby_name:
                     hobby, _ = Hobby.objects.get_or_create(name=hobby_name)
