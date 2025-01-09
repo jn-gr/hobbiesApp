@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full flex items-center justify-center p-4 bg-background">
+  <div class="min-h-[calc(100svh-57px)] flex items-center justify-center p-4 bg-background">
     <Card class="w-full max-w-lg shadow-lg">
       <CardHeader class="space-y-1">
         <CardTitle class="text-2xl font-bold text-center">Create an Account</CardTitle>
@@ -65,9 +65,8 @@
             <div class="flex gap-2">
               <Input 
                 v-model="newHobby" 
-                placeholder="Type a hobby and press Enter" 
+                placeholder="Type a hobby" 
                 class="flex-1"
-                @keyup.enter="addNewHobby"
               />
               <Button 
                 type="button" 
@@ -78,26 +77,6 @@
               </Button>
             </div>
           </div>
-
-          <TransitionGroup name="fade">
-            <Alert 
-              v-if="errorMessage" 
-              variant="destructive" 
-              class="mt-4"
-              key="error"
-            >
-              <AlertDescription>{{ errorMessage }}</AlertDescription>
-            </Alert>
-
-            <Alert 
-              v-if="successMessage" 
-              variant="default" 
-              class="mt-4"
-              key="success"
-            >
-              <AlertDescription>{{ successMessage }}</AlertDescription>
-            </Alert>
-          </TransitionGroup>
 
           <Button type="submit" class="w-full">
             Create Account
@@ -144,6 +123,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { toast } from 'sonner'
 
 interface Hobby {
   id: number;
@@ -205,19 +185,15 @@ export default {
                 });
 
                 const data = await response.json();
-                console.log("Signup Response:", data);
 
                 if (data.success) {
-                    this.successMessage = data.message;
-                    this.errorMessage = "";
-                    setTimeout(() => this.$router.push("/login"), 2000);
+                    toast.success(data.message);
+                    setTimeout(() => this.$router.push("/"), 2000);
                 } else {
-                    this.errorMessage = data.message || "Signup failed.";
-                    this.successMessage = "";
+                    toast.error(data.message || "Signup failed.");
                 }
             } catch (error) {
-                console.error("Error during signup:", error);
-                this.errorMessage = "An error has occurred.";
+                toast.error("An error occurred during signup.");
             }
         },
         addNewHobby() {
