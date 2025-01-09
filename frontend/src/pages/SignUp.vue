@@ -62,10 +62,33 @@
               </div>
             </div>
             
+            <div class="mb-4">
+              <Label>Select from existing hobbies:</Label>
+              <Select
+                v-model="selectedHobbyId"
+                @update:modelValue="(value: string) => handleExistingHobbySelect(Number(value))"
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a hobby" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem
+                      v-for="hobby in availableHobbies"
+                      :key="hobby.id"
+                      :value="String(hobby.id)"
+                    >
+                      {{ hobby.name }}
+                    </SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            
             <div class="flex gap-2">
               <Input 
                 v-model="newHobby" 
-                placeholder="Type a hobby" 
+                placeholder="Or type a new hobby" 
                 class="flex-1"
               />
               <Button 
@@ -124,6 +147,8 @@ import {
 } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { toast } from 'sonner'
+import { useAuthStore } from '../stores/auth'
+import { useRouter } from 'vue-router'
 
 interface Hobby {
   id: number;
@@ -132,23 +157,32 @@ interface Hobby {
 
 export default {
     components: {
-      Button,
-      Card,
-      CardContent,
-      CardDescription,
-      CardFooter,
-      CardHeader,
-      CardTitle,
-      Input,
-      Label,
-      Select,
-      SelectContent,
-      SelectGroup,
-      SelectItem,
-      SelectTrigger,
-      SelectValue,
-      Alert,
-      AlertDescription
+        Button,
+        Card,
+        CardContent,
+        CardDescription,
+        CardFooter,
+        CardHeader,
+        CardTitle,
+        Input,
+        Label,
+        Select,
+        SelectContent,
+        SelectGroup,
+        SelectItem,
+        SelectTrigger,
+        SelectValue,
+        Alert,
+        AlertDescription
+    },
+    setup() {
+        const authStore = useAuthStore()
+        const router = useRouter()
+        
+        return {
+            authStore,
+            router
+        }
     },
     data() {
         return {
@@ -162,6 +196,7 @@ export default {
             newHobby: "",
             errorMessage: "",
             successMessage: "",
+            selectedHobbyId: "" as string,
         };
     },
     methods: {
@@ -180,15 +215,23 @@ export default {
                         name: this.formData.name,
                         email: this.formData.email,
                         password: this.formData.password,
-                        hobbies: this.selectedHobbies, 
+                        hobbies: this.selectedHobbies,
                     }),
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
+                    // Set user data in Pinia store
+                    this.authStore.setUser({
+                        email: this.formData.email,
+                        name: this.formData.name,
+                        date_of_birth: "", // This will be set later in profile
+                        hobbies: this.selectedHobbies.map(h => h.name)
+                    });
+                    
                     toast.success(data.message);
-                    setTimeout(() => this.$router.push("/"), 2000);
+                    this.router.push("/profile");
                 } else {
                     toast.error(data.message || "Signup failed.");
                 }
@@ -196,11 +239,35 @@ export default {
                 toast.error("An error occurred during signup.");
             }
         },
-        addNewHobby() {
-            const hobbyName = this.newHobby.trim();
+        handleExistingHobbySelect(id: number) {
+            const hobby = this.availableHobbies.find(h => h.id === id)
+            if (hobby && !this.selectedHobbies.some(h => h.id === hobby.id)) {
+                this.selectedHobbies.push(hobby)
+            }
+            this.selectedHobbyId = ""
+        },
+        async addNewHobby() {
+            const hobbyName = this.newHobby.trim()
             if (hobbyName && !this.selectedHobbies.some(h => h.name === hobbyName)) {
-                this.selectedHobbies.push({ id: Date.now(), name: hobbyName });
-                this.newHobby = "";
+                try {
+                    const response = await fetch("http://127.0.0.1:8000/api/hobbies/", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ name: hobbyName }),
+                    })
+                    
+                    if (response.ok) {
+                        const newHobbyData = await response.json()
+                        this.selectedHobbies.push(newHobbyData)
+                        this.newHobby = ""
+                        // Refresh available hobbies
+                        await this.fetchAvailableHobbies()
+                    } else {
+                        toast.error("Failed to add hobby")
+                    }
+                } catch (error) {
+                    toast.error("Failed to add hobby")
+                }
             }
         },
         removeHobby(hobby: Hobby) {
