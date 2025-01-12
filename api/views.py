@@ -42,8 +42,7 @@ def profile_api(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"success": True, "data": data})
     return JsonResponse({"success": False, "message": "Invalid request method."}, status=405)
 
-
-# Update the user's profile
+# Update the current user's profile data
 @login_required
 @require_POST
 @csrf_exempt
@@ -53,7 +52,6 @@ def update_profile_api(request: HttpRequest) -> JsonResponse:
         user: CustomUser = request.user
         updated_fields = []
 
-        # Only update fields that are present in the request
         if 'name' in data and data['name'] != user.name:
             user.name = data['name']
             updated_fields.append('name')
@@ -72,18 +70,17 @@ def update_profile_api(request: HttpRequest) -> JsonResponse:
             updated_fields.append('date_of_birth')
 
         if 'hobbies' in data:
-            new_hobby_ids = set(data['hobbies'])
+            new_hobby_ids = set(hobby['id'] for hobby in data['hobbies'])
             current_hobby_ids = set(user.hobbies.values_list('id', flat=True))
             
             if new_hobby_ids != current_hobby_ids:
-                hobbies = Hobby.objects.filter(id__in=data['hobbies'])
+                hobbies = Hobby.objects.filter(id__in=new_hobby_ids)
                 user.hobbies.set(hobbies)
                 updated_fields.append('hobbies')
 
         if updated_fields:
             user.save()
             
-            # Return updated user data
             updated_data = {
                 "id": user.id,
                 "name": user.name,
