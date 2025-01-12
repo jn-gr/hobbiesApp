@@ -1,18 +1,24 @@
 from typing import Any, Dict
 from django.http import JsonResponse, HttpRequest
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.contrib.auth import update_session_auth_hash, login, logout, authenticate
 from .models import CustomUser, Hobby
 import json
-from django.core.paginator import Paginator
-from django.db.models import Count, Q, F
+from django.db.models import Count, Q
 from datetime import date, timedelta
 from django.shortcuts import get_object_or_404
 from .models import FriendRequest
 from typing import List, TypedDict
+from django.middleware.csrf import get_token
+from django.views.decorators.csrf import ensure_csrf_cookie
+
+def get_csrf(request):
+    response = JsonResponse({'detail': 'CSRF cookie set'})
+    response['X-CSRFToken'] = get_token(request)
+    return response
 
 # Render the main SPA
 def main_spa(request: HttpRequest) -> JsonResponse:
@@ -257,10 +263,14 @@ def user_login(request):
             data = json.loads(request.body)
             email = data.get("email")
             password = data.get("password")
+            if email is None or password is None:
+                return JsonResponse({'detail': 'Please provide email and password.'}, status=400)
 
             print(f"Attempting to authenticate user: {email}")
 
-            user = authenticate(request, username=email, password=password)
+            user = authenticate(username=email, password=password)
+            if user is None:
+                return JsonResponse({'detail': 'Invalid credentials.'}, status=400)
             print(f"Authenticated User: {user}")
 
             if user:
@@ -400,6 +410,9 @@ def reject_friend_request(request, request_id):
 @csrf_exempt
 def user_logout(request: HttpRequest) -> JsonResponse:
     if request.method == "POST":
+        if not request.user.is_authenticated:
+            return JsonResponse({'detail': 'You\'re not logged in.'}, status=400)
+        
         logout(request)
         return JsonResponse({
             "success": True,
@@ -409,3 +422,17 @@ def user_logout(request: HttpRequest) -> JsonResponse:
         "success": False,
         "message": "Invalid request method"
     }, status=405)
+
+@ensure_csrf_cookie
+def session_view(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'isAuthenticated': False})
+
+    return JsonResponse({'isAuthenticated': True})
+
+
+def whoami_view(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'isAuthenticated': False})
+
+    return JsonResponse({'username': request.user.username})
