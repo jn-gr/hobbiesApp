@@ -14,16 +14,17 @@ from .models import FriendRequest
 from typing import List, TypedDict
 from django.middleware.csrf import get_token
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.http import require_http_methods
 
-def get_csrf(request):
-    response = JsonResponse({'detail': 'CSRF cookie set'})
-    response['X-CSRFToken'] = get_token(request)
+@ensure_csrf_cookie
+def set_csrf_token(request):
+    response = JsonResponse({"details": "CSRF cookie set"})
+    response['X-CSRFToken'] = get_token(request)  # Explicitly set the token
     return response
 
 # Render the main SPA
 def main_spa(request: HttpRequest) -> JsonResponse:
     return render(request, 'api/spa/index.html', {})
-
 
 # Fetch the current user's profile data
 @login_required
@@ -268,7 +269,7 @@ def user_login(request):
 
             print(f"Attempting to authenticate user: {email}")
 
-            user = authenticate(username=email, password=password)
+            user = authenticate(request, username=email, password=password)
             if user is None:
                 return JsonResponse({'detail': 'Invalid credentials.'}, status=400)
             print(f"Authenticated User: {user}")
@@ -423,16 +424,13 @@ def user_logout(request: HttpRequest) -> JsonResponse:
         "message": "Invalid request method"
     }, status=405)
 
-@ensure_csrf_cookie
-def session_view(request):
-    if not request.user.is_authenticated:
-        return JsonResponse({'isAuthenticated': False})
-
-    return JsonResponse({'isAuthenticated': True})
-
-
-def whoami_view(request):
-    if not request.user.is_authenticated:
-        return JsonResponse({'isAuthenticated': False})
-
-    return JsonResponse({'username': request.user.username})
+@require_http_methods(['GET'])
+def user(request):
+    print(request.user)
+    if request.user.is_authenticated:
+        return JsonResponse(
+            {'email': request.user.email}
+        )
+    return JsonResponse(
+        {'message': 'Not logged in'}, status=401
+    )
