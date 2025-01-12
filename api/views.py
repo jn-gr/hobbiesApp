@@ -299,7 +299,6 @@ def similar_users(request):
     current_user = request.user
     user_hobbies = set(current_user.hobbies.values_list('id', flat=True))
 
-    # Calculate similarity scores
     users = CustomUser.objects.exclude(id=current_user.id).annotate(
         common_hobbies=Count('hobbies', filter=Q(hobbies__id__in=user_hobbies))
     ).order_by('-common_hobbies')
@@ -313,12 +312,13 @@ def similar_users(request):
     if age_max:
         users = users.filter(date_of_birth__gte=today - timedelta(days=int(age_max)*365))
 
+    total_count = users.count()
+
     page = int(request.GET.get('page', 1))
-    per_page = 10
+    per_page = 9
     start = (page - 1) * per_page
     end = start + per_page
     users_paginated = users[start:end]
-    has_next = users.count() > end
 
     friend_ids = set(current_user.friends.values_list('id', flat=True))
     sent_request_ids = set(current_user.sent_requests.filter(
@@ -338,8 +338,10 @@ def similar_users(request):
     ]
 
     return JsonResponse({
-        'users': users_data, 
-        'has_next': has_next
+        'users': users_data,
+        'total_count': total_count,
+        'page': page,
+        'per_page': per_page
     }, safe=False)
 
 

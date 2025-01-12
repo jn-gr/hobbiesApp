@@ -304,9 +304,7 @@ const getChangedFields = () => {
 const submitUpdateProfile = async (): Promise<void> => {
   try {
     const changes = getChangedFields()
-    console.log('Changes to submit:', changes) // Debug log
-    
-    // If no changes, show message and return
+
     if (Object.keys(changes).length === 0) {
       toast.info("No changes to update")
       return
@@ -324,7 +322,7 @@ const submitUpdateProfile = async (): Promise<void> => {
     })
     
     const result = await response.json()
-    console.log('Update response:', result) // Debug log
+    console.log('Update response:', result)
     
     if (result.success) {
       Object.assign(formData, result.data)
@@ -334,7 +332,7 @@ const submitUpdateProfile = async (): Promise<void> => {
       toast.error(result.message)
     }
   } catch (error) {
-    console.error('Update error:', error) // Debug log
+    console.error('Update error:', error)
     toast.error("Failed to update profile")
   }
 }

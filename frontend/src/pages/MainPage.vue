@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { UserPlus, Compass } from 'lucide-vue-next'
+import { useRoute, useRouter } from 'vue-router'
 
 interface User {
   id: number
@@ -20,24 +21,35 @@ interface User {
 // const authStore = useAuthStore()
 // const router = useRouter()
 
+const route = useRoute()
+const router = useRouter()
 const users = ref<User[]>([])
-const hasNextPage = ref(false)
+const totalPages = ref(0)
 const currentPage = ref(1)
 const ageMin = ref('')
 const ageMax = ref('')
 const isLoading = ref(false)
 
-const fetchUsers = async (page: number = 1) => {
+// Initialize from URL params
+onMounted(() => {
+  const { page, age_min, age_max } = route.query
+  currentPage.value = Number(page) || 1
+  ageMin.value = String(age_min || '')
+  ageMax.value = String(age_max || '')
+  fetchUsers()
+})
+
+const fetchUsers = async () => {
   try {
     isLoading.value = true
     const params = new URLSearchParams({
-      page: String(page)
+      page: String(currentPage.value)
     })
     
     if (ageMin.value) params.append('age_min', ageMin.value)
     if (ageMax.value) params.append('age_max', ageMax.value)
     
-    console.log('Fetching users with params:', params.toString()) // Debug log
+    console.log('Fetching users with params:', params.toString())
     
     const response = await fetch(`http://localhost:8000/api/similar_users/?${params}`, {
       credentials: 'include'
@@ -45,12 +57,20 @@ const fetchUsers = async (page: number = 1) => {
     
     if (response.ok) {
       const data = await response.json()
-      console.log('Received users data:', data) // Debug log
+      console.log('Received users data:', data)
       users.value = data.users
-      hasNextPage.value = data.has_next
-      currentPage.value = page
+      totalPages.value = Math.ceil(data.total_count / 9) // Assuming 9 per page
+      
+      // Update URL with current filters
+      router.push({
+        query: {
+          ...(currentPage.value > 1 && { page: currentPage.value }),
+          ...(ageMin.value && { age_min: ageMin.value }),
+          ...(ageMax.value && { age_max: ageMax.value })
+        }
+      })
     } else {
-      console.error('Failed response:', await response.text()) // Debug error response
+      console.error('Failed response:', await response.text())
     }
   } catch (error) {
     console.error('Failed to fetch users:', error)
@@ -60,13 +80,13 @@ const fetchUsers = async (page: number = 1) => {
 }
 
 const applyFilters = () => {
-  fetchUsers(1) // Reset to first page when filters change
+  currentPage.value = 1 // Reset to first page when filters change
+  fetchUsers()
 }
 
-const loadNextPage = () => {
-  if (hasNextPage.value && !isLoading.value) {
-    fetchUsers(currentPage.value + 1)
-  }
+const goToPage = (page: number) => {
+  currentPage.value = page
+  fetchUsers()
 }
 
 const getAvatarUrl = (name: string) => {
@@ -178,14 +198,38 @@ onMounted(async () => {
     </div>
 
     <!-- Pagination -->
-    <div class="mt-8 flex justify-center">
+    <div class="mt-8 flex justify-end items-center gap-2">
       <Button
-        v-if="hasNextPage"
-        @click="loadNextPage"
         variant="outline"
-        :disabled="isLoading"
+        size="sm"
+        :disabled="currentPage === 1 || isLoading"
+        @click="goToPage(currentPage - 1)"
       >
-        {{ isLoading ? 'Loading...' : 'Load More' }}
+        Previous
+      </Button>
+      
+      <div class="flex items-center gap-1">
+        <Button
+          v-for="page in totalPages"
+          :key="page"
+          variant="outline"
+          size="sm"
+          :class="{
+            'bg-primary text-primary-foreground': page === currentPage
+          }"
+          @click="goToPage(page)"
+        >
+          {{ page }}
+        </Button>
+      </div>
+      
+      <Button
+        variant="outline"
+        size="sm"
+        :disabled="currentPage === totalPages || isLoading"
+        @click="goToPage(currentPage + 1)"
+      >
+        Next
       </Button>
     </div>
   </div>
