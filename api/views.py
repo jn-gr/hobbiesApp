@@ -258,11 +258,16 @@ def user_login(request):
             email = data.get("email")
             password = data.get("password")
 
+            print(f"Attempting to authenticate user: {email}")
+
             user = authenticate(request, username=email, password=password)
+            print(f"Authenticated User: {user}")
 
             if user:
+                if not user.is_active:
+                    return JsonResponse({"success": False, "message": "User account is inactive."}, status=403)
+
                 login(request, user)
-                # Return user data directly after successful login
                 user_data = {
                     "id": user.id,
                     "name": user.name,
@@ -270,15 +275,14 @@ def user_login(request):
                     "date_of_birth": user.date_of_birth.isoformat() if user.date_of_birth else "",
                     "hobbies": list(user.hobbies.values('id', 'name')),
                 }
-                return JsonResponse({
-                    "success": True, 
-                    "message": "Successful Login.",
-                    "user": user_data
-                })
+                return JsonResponse({"success": True, "message": "Successful Login.", "user": user_data})
+            
             return JsonResponse({"success": False, "message": "Cannot Authenticate User"}, status=403)
         except Exception as e:
+            print(f"Error in login: {e}")
             return JsonResponse({"success": False, "message": str(e)}, status=400)
     return JsonResponse({"success": False, "message": "Invalid Request."}, status=405)
+
 
 
 @csrf_exempt
