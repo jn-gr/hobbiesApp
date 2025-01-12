@@ -1,53 +1,192 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useAuthStore } from '../stores/auth'
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
+// import { useAuthStore } from '../stores/auth'
+// import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { UserPlus, Compass } from 'lucide-vue-next'
 
-const authStore = useAuthStore()
-const router = useRouter()
+interface User {
+  id: number
+  name: string
+  common_hobbies: number
+  age: number | null
+  isFriend: boolean
+  requestSent: boolean
+}
 
-const logout = async () => {
+// const authStore = useAuthStore()
+// const router = useRouter()
+
+const users = ref<User[]>([])
+const hasNextPage = ref(false)
+const currentPage = ref(1)
+const ageMin = ref('')
+const ageMax = ref('')
+const isLoading = ref(false)
+
+const fetchUsers = async (page: number = 1) => {
   try {
-    await authStore.logout(router)
+    isLoading.value = true
+    const params = new URLSearchParams({
+      page: String(page)
+    })
+    
+    if (ageMin.value) params.append('age_min', ageMin.value)
+    if (ageMax.value) params.append('age_max', ageMax.value)
+    
+    console.log('Fetching users with params:', params.toString()) // Debug log
+    
+    const response = await fetch(`http://localhost:8000/api/similar_users/?${params}`, {
+      credentials: 'include'
+    })
+    
+    if (response.ok) {
+      const data = await response.json()
+      console.log('Received users data:', data) // Debug log
+      users.value = data.users
+      hasNextPage.value = data.has_next
+      currentPage.value = page
+    } else {
+      console.error('Failed response:', await response.text()) // Debug error response
+    }
   } catch (error) {
-    console.error(error)
+    console.error('Failed to fetch users:', error)
+  } finally {
+    isLoading.value = false
   }
 }
 
+const applyFilters = () => {
+  fetchUsers(1) // Reset to first page when filters change
+}
+
+const loadNextPage = () => {
+  if (hasNextPage.value && !isLoading.value) {
+    fetchUsers(currentPage.value + 1)
+  }
+}
+
+const getAvatarUrl = (name: string) => {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
+}
+
+const sendFriendRequest = async (userId: number) => {
+  // TODO: Implement friend request functionality
+  console.log('Send friend request to:', userId)
+}
+
 onMounted(async () => {
-  await authStore.fetchUser()
+  await fetchUsers()
 })
 </script>
 
 <template>
   <div class="container mx-auto p-8">
-    <Card class="max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle class="text-3xl">Welcome to the Dashboard</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div v-if="authStore.isAuthenticated" class="space-y-4">
-          <h2 class="text-2xl font-semibold">
-            Hi there {{ authStore.user?.email }}!
-          </h2>
-          <p class="text-muted-foreground">
-            You are currently logged in to your account.
-          </p>
-          <Button @click="logout" variant="destructive">
-            Logout
-          </Button>
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 space-y-6 md:space-y-0">
+      <div class="flex items-center gap-2">
+        <Compass class="h-6 w-6" />
+        <h1 class="text-2xl font-bold">Discover</h1>
+      </div>
+      
+      <div class="flex items-end gap-4 flex-wrap">
+        <div class="space-y-2">
+          <Label>Age Range</Label>
+          <div class="flex items-center gap-2">
+            <Input
+              v-model="ageMin"
+              type="number"
+              placeholder="Min"
+              class="w-24"
+            />
+            <span>-</span>
+            <Input
+              v-model="ageMax"
+              type="number"
+              placeholder="Max"
+              class="w-24"
+            />
+          </div>
         </div>
-        <div v-else class="space-y-4">
-          <p class="text-muted-foreground">
-            You are not logged in.
-          </p>
-          <Button asChild>
-            <router-link to="/login">Login</router-link>
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        <Button @click="applyFilters">Apply Filters</Button>
+      </div>
+    </div>
+
+    <div v-if="isLoading && users.length === 0" class="text-center py-12">
+      <p>Loading users...</p>
+    </div>
+
+    <div v-else-if="!isLoading && users.length === 0" class="text-center py-12">
+      <h3 class="text-lg font-semibold">No users found</h3>
+      <p class="text-muted-foreground">
+        Try adjusting your filters or add some hobbies to your profile to find users with similar interests.
+      </p>
+    </div>
+
+    <!-- User Grid -->
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <Card v-for="user in users" :key="user.id" class="relative">
+        <Button
+          v-if="!user.isFriend && !user.requestSent"
+          class="absolute top-4 right-4"
+          variant="outline"
+          size="sm"
+          @click="sendFriendRequest(user.id)"
+        >
+          <UserPlus />
+        </Button>
+        <Button
+          v-else-if="user.requestSent"
+          class="absolute top-4 right-4"
+          variant="secondary"
+          size="sm"
+          disabled
+        >
+          Request Sent
+        </Button>
+        <Button
+          v-else
+          class="absolute top-4 right-4"
+          variant="secondary"
+          size="sm"
+          disabled
+        >
+          Friends
+        </Button>
+
+        <CardContent class="pt-6">
+          <div class="flex items-start gap-4">
+            <img
+              :src="getAvatarUrl(user.name)"
+              :alt="user.name"
+              class="rounded-full w-16 h-16"
+            />
+            <div>
+              <h3 class="font-semibold text-lg">{{ user.name }}</h3>
+              <p class="text-sm text-muted-foreground">
+                {{ user.age ? `${user.age} years old` : 'Age not specified' }}
+              </p>
+              <p class="text-sm text-muted-foreground">
+                {{ user.common_hobbies }} shared {{ user.common_hobbies === 1 ? 'hobby' : 'hobbies' }}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-8 flex justify-center">
+      <Button
+        v-if="hasNextPage"
+        @click="loadNextPage"
+        variant="outline"
+        :disabled="isLoading"
+      >
+        {{ isLoading ? 'Loading...' : 'Load More' }}
+      </Button>
+    </div>
   </div>
 </template>

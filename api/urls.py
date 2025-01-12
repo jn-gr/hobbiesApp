@@ -27,4 +27,7 @@ urlpatterns = [
     path('friend_requests/send/<int:user_id>/', views.send_friend_request, name='send_friend_request'),
     path('friend_requests/accept/<int:request_id>/', views.accept_friend_request, name='accept_friend_request'),
     path('friend_requests/reject/<int:request_id>/', views.reject_friend_request, name='reject_friend_request'),
+
+    # Similar users
+    path('similar_users/', views.similar_users, name='similar_users'),
 ]
