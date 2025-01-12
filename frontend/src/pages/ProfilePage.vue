@@ -40,6 +40,64 @@
               />
             </div>
 
+            <div class="space-y-2">
+              <Label>Hobbies</Label>
+              <div class="flex flex-wrap gap-2 mb-2">
+                <div 
+                  v-for="hobby in formData.hobbies" 
+                  :key="hobby.id"
+                  class="bg-primary/10 text-primary px-3 py-1 rounded-full flex items-center gap-2"
+                >
+                  {{ hobby.name }}
+                  <button 
+                    @click="removeHobby(hobby)" 
+                    class="hover:text-destructive"
+                    type="button"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+              
+              <div class="mb-4">
+                <Label>Select from existing hobbies:</Label>
+                <Select
+                  v-model="selectedHobbyId"
+                  @update:modelValue="handleExistingHobbySelect"
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a hobby" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem
+                        v-for="hobby in availableHobbies"
+                        :key="hobby.id"
+                        :value="String(hobby.id)"
+                      >
+                        {{ hobby.name }}
+                      </SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div class="flex gap-2">
+                <Input 
+                  v-model="newHobby" 
+                  placeholder="Or type a new hobby" 
+                  class="flex-1"
+                />
+                <Button 
+                  type="button" 
+                  @click="addNewHobby" 
+                  variant="outline"
+                >
+                  Add
+                </Button>
+              </div>
+            </div>
+
             <Button type="submit">Update Profile</Button>
           </form>
         </CardContent>
@@ -91,6 +149,25 @@
           </form>
         </CardContent>
       </Card>
+
+      <Card class="mt-8">
+        <CardHeader>
+          <CardTitle>Logout</CardTitle>
+          <CardDescription>
+            Sign out of your account
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent>
+          <Button 
+            variant="destructive" 
+            @click="logout" 
+            class="w-full"
+          >
+            Logout
+          </Button>
+        </CardContent>
+      </Card>
     </div>
 
     <div v-else class="text-center min-h-[calc(100svh-124px)] flex items-center justify-center p-4 bg-background">
@@ -124,30 +201,40 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface Hobby {
   id: number
   name: string
 }
 
-interface User {
+interface ProfileFormData {
   id: number
   name: string
   email: string
   date_of_birth: string
-  hobbies: number[]
+  hobbies: Hobby[]
 }
 
 const router = useRouter()
 const authStore = useAuthStore()
-const hobbies = ref<Hobby[]>([])
+const availableHobbies = ref<Hobby[]>([])
+const newHobby = ref("")
+const selectedHobbyId = ref("")
 
-const formData = reactive<User>({
-  id: 0,
-  name: "",
-  email: "",
-  date_of_birth: "",
-  hobbies: [],
+const formData = reactive<ProfileFormData>({
+  id: authStore.user?.id || 0,
+  name: authStore.user?.name || '',
+  email: authStore.user?.email || '',
+  date_of_birth: authStore.user?.date_of_birth || '',
+  hobbies: Array.isArray(authStore.user?.hobbies) ? [...authStore.user.hobbies] : [],
 })
 
 const passwordData = reactive({
@@ -160,7 +247,9 @@ const fetchHobbies = async (): Promise<void> => {
   try {
     const response = await fetch("http://127.0.0.1:8000/api/hobbies/")
     if (response.ok) {
-      hobbies.value = await response.json()
+      const data = await response.json()
+      availableHobbies.value = data
+      console.log('Available hobbies:', data)
     }
   } catch (error) {
     toast.error("Failed to fetch hobbies")
@@ -169,11 +258,16 @@ const fetchHobbies = async (): Promise<void> => {
 
 const fetchUserProfile = async (): Promise<void> => {
   try {
-    const response = await fetch("http://127.0.0.1:8000/api/profile/", {
-      credentials: 'include'
+    const csrfToken = await authStore.setCsrfToken()
+    const response = await fetch("http://localhost:8000/api/profile/", {
+      credentials: 'include',
+      headers: {
+        'X-CSRFToken': csrfToken
+      }
     })
     if (response.ok) {
       const userData = await response.json()
+      console.log('User data:', userData)
       if (userData.success) {
         Object.assign(formData, userData.data)
         authStore.setUser(userData.data)
@@ -184,15 +278,54 @@ const fetchUserProfile = async (): Promise<void> => {
   }
 }
 
+const getChangedFields = () => {
+  const changes: Partial<ProfileFormData> = {}
+  
+  if (formData.name !== authStore.user?.name) {
+    changes.name = formData.name
+  }
+  
+  if (formData.email !== authStore.user?.email) {
+    changes.email = formData.email
+  }
+  
+  if (formData.date_of_birth !== authStore.user?.date_of_birth) {
+    changes.date_of_birth = formData.date_of_birth
+  }
+  
+  // Always include hobbies if they're present in formData
+  if (formData.hobbies.length > 0) {
+    changes.hobbies = formData.hobbies
+  }
+  
+  return changes
+}
+
 const submitUpdateProfile = async (): Promise<void> => {
   try {
-    const response = await fetch("http://127.0.0.1:8000/api/profile/update/", {
+    const changes = getChangedFields()
+    console.log('Changes to submit:', changes) // Debug log
+    
+    // If no changes, show message and return
+    if (Object.keys(changes).length === 0) {
+      toast.info("No changes to update")
+      return
+    }
+    
+    const csrfToken = await authStore.setCsrfToken()
+    const response = await fetch("http://localhost:8000/api/profile/update/", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
+      headers: { 
+        "Content-Type": "application/json",
+        'X-CSRFToken': csrfToken
+      },
+      body: JSON.stringify(changes),
       credentials: 'include'
     })
+    
     const result = await response.json()
+    console.log('Update response:', result) // Debug log
+    
     if (result.success) {
       Object.assign(formData, result.data)
       authStore.setUser(result.data)
@@ -201,15 +334,20 @@ const submitUpdateProfile = async (): Promise<void> => {
       toast.error(result.message)
     }
   } catch (error) {
+    console.error('Update error:', error) // Debug log
     toast.error("Failed to update profile")
   }
 }
 
 const submitUpdatePassword = async (): Promise<void> => {
   try {
-    const response = await fetch("http://127.0.0.1:8000/api/profile/password/", {
+    const csrfToken = await authStore.setCsrfToken()
+    const response = await fetch("http://localhost:8000/api/profile/password/", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        'X-CSRFToken': csrfToken
+      },
       body: JSON.stringify(passwordData),
       credentials: 'include'
     })
@@ -229,6 +367,55 @@ const submitUpdatePassword = async (): Promise<void> => {
 
 const goToSignin = (): void => {
   router.push("/login")
+}
+
+const logout = async () => {
+  try {
+    await authStore.logout(router)
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+const handleExistingHobbySelect = (id: string) => {
+  const hobby = availableHobbies.value.find(h => h.id === Number(id))
+  if (hobby && !formData.hobbies.some(h => h.id === hobby.id)) {
+    formData.hobbies.push(hobby)
+  }
+  selectedHobbyId.value = ""
+}
+
+const addNewHobby = async () => {
+  const hobbyName = newHobby.value.trim()
+  if (hobbyName && !formData.hobbies.some(h => h.name.toLowerCase() === hobbyName.toLowerCase())) {
+    try {
+      const csrfToken = await authStore.setCsrfToken()
+      const response = await fetch("http://localhost:8000/api/hobbies/", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          'X-CSRFToken': csrfToken
+        },
+        credentials: 'include',
+        body: JSON.stringify({ name: hobbyName }),
+      })
+      
+      if (response.ok) {
+        const newHobbyData = await response.json()
+        formData.hobbies.push(newHobbyData)
+        newHobby.value = ""
+        await fetchHobbies()
+      } else {
+        toast.error("Failed to add hobby")
+      }
+    } catch (error) {
+      toast.error("Failed to add hobby")
+    }
+  }
+}
+
+const removeHobby = (hobby: Hobby) => {
+  formData.hobbies = formData.hobbies.filter(h => h.id !== hobby.id)
 }
 
 onMounted(() => {

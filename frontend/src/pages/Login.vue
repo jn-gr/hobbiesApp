@@ -14,10 +14,11 @@
             <Input 
               id="email" 
               type="email" 
-              v-model="form.email" 
+              v-model="formData.email" 
               placeholder="Enter your email"
               class="w-full"
               required 
+              @input="resetError"
             />
           </div>
 
@@ -26,15 +27,24 @@
             <Input 
               id="password" 
               type="password" 
-              v-model="form.password" 
+              v-model="formData.password" 
               placeholder="Enter your password"
               class="w-full"
               required 
+              @input="resetError"
             />
           </div>
 
+          <Alert variant="destructive" v-if="error">
+            <AlertCircle class="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              {{ error }}
+            </AlertDescription>
+          </Alert>
+
           <Button type="submit" class="w-full">
-            Login
+            Sign In
           </Button>
 
           <p class="text-center text-sm text-muted-foreground">
@@ -43,7 +53,7 @@
               to="/signup" 
               class="text-primary hover:underline"
             >
-              Sign up here
+              Create an account
             </router-link>
           </p>
         </form>
@@ -52,47 +62,56 @@
   </div>
 </template>
 
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>
+
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
+import { AlertCircle } from 'lucide-vue-next'
 import { toast } from 'sonner'
+
+interface FormData {
+  email: string
+  password: string
+}
 
 const router = useRouter()
 const authStore = useAuthStore()
-
-const form = reactive({
-    email: "",
-    password: "",
+const error = ref('')
+const formData = ref<FormData>({
+  email: '',
+  password: ''
 })
 
 const handleLogin = async () => {
-    try {
-        const response = await fetch('http://127.0.0.1:8000/api/login/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(form),
-        });
-
-        const data = await response.json()
-        console.log('Login response:', data)
-
-        if (data.success && data.user) {
-            authStore.setUser(data.user)
-            toast.success(data.message)
-            router.push('/profile')
-        } else {
-            toast.error(data.message || 'Login failed')
-        }
-    } catch (error) {
-        console.error('Login error:', error)
-        toast.error(`Login Failed: ${error}`)
+  try {
+    await authStore.login(formData.value.email, formData.value.password, router)
+    if (!authStore.isAuthenticated) {
+      error.value = 'Login failed. Please check your credentials.'
     }
+  } catch (err) {
+    error.value = 'An error occurred during login: ' + err
+    toast.error(error.value)
+  }
+}
+
+const resetError = () => {
+  error.value = ''
 }
 </script>

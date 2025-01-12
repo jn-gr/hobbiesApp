@@ -54,44 +54,22 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
-import { RouterView } from "vue-router";
-import { useAuthStore } from './stores/auth'
+<script setup lang="ts">
+import { onMounted, computed } from 'vue';
+import { useAuthStore } from './stores/auth';
+import { useRouter } from 'vue-router';
 
-export default defineComponent({
-  components: { RouterView },
-  setup() {
-    const authStore = useAuthStore()
-    console.log(authStore.user, 'authStore.user')
+const authStore = useAuthStore();
+const router = useRouter();
 
-    const avatarUrl = `https://ui-avatars.com/api/?background=9F7AEA&length=1&color=fff&name=${encodeURIComponent(authStore.user?.email || 'test')}`
+const avatarUrl = computed(() => {
+  return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(authStore.user?.name || 'User');
+});
 
-    const handleLogout = async () => {
-      try {
-        const response = await fetch('http://localhost:8000/api/logout/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include'
-        });
-        
-        if (response.ok) {
-          authStore.logout();
-          // Redirect to login page
-          window.location.href = '/login';
-        }
-      } catch (error) {
-        console.error('Logout failed:', error);
-      }
-    }
-
-    return {
-      authStore,
-      handleLogout,
-      avatarUrl
-    }
+onMounted(async () => {
+  await authStore.fetchUser();
+  if (authStore.isAuthenticated && router.currentRoute.value.meta.requiresGuest) {
+    router.push('/profile');
   }
 });
 </script>

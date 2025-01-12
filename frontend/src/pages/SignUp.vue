@@ -132,9 +132,12 @@
 }
 </style>
 
-<script lang="ts">
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -145,138 +148,124 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { toast } from 'sonner'
-import { useAuthStore } from '../stores/auth'
-import { useRouter } from 'vue-router'
 
 interface Hobby {
-  id: number;
-  name: string;
+  id: number
+  name: string
 }
 
-export default {
-    components: {
-        Button,
-        Card,
-        CardContent,
-        CardDescription,
-        CardFooter,
-        CardHeader,
-        CardTitle,
-        Input,
-        Label,
-        Select,
-        SelectContent,
-        SelectGroup,
-        SelectItem,
-        SelectTrigger,
-        SelectValue,
-        Alert,
-        AlertDescription
-    },
-    setup() {
-        const authStore = useAuthStore()
-        const router = useRouter()
-        
-        return {
-            authStore,
-            router
-        }
-    },
-    data() {
-        return {
-            formData: {
-                name: "",
-                email: "",
-                password: "",
-            },
-            selectedHobbies: [] as Hobby[],
-            availableHobbies: [] as Hobby[],
-            newHobby: "",
-            errorMessage: "",
-            successMessage: "",
-            selectedHobbyId: "" as string,
-        };
-    },
-    methods: {
-        async fetchAvailableHobbies() {
-            const response = await fetch("http://127.0.0.1:8000/api/hobbies/");
-            if (response.ok) {
-                this.availableHobbies = await response.json();
-            }
-        },
-        async handleSignup() {
-            try {
-                const response = await fetch("http://127.0.0.1:8000/api/signup/", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        name: this.formData.name,
-                        email: this.formData.email,
-                        password: this.formData.password,
-                        hobbies: this.selectedHobbies,
-                    }),
-                });
+interface FormData {
+  name: string
+  email: string
+  password: string
+}
 
-                const data = await response.json();
+const router = useRouter()
+const authStore = useAuthStore()
 
-                if (data.success) {
-                    this.authStore.setUser({
-                        id: data.user.id,
-                        email: this.formData.email,
-                        name: this.formData.name,
-                        date_of_birth: "",
-                        hobbies: this.selectedHobbies
-                    });
-                    
-                    toast.success(data.message);
-                    this.router.push("/profile");
-                } else {
-                    toast.error(data.message || "Signup failed.");
-                }
-            } catch (error) {
-                toast.error("An error occurred during signup.");
-            }
+const formData = ref<FormData>({
+  name: "",
+  email: "",
+  password: "",
+})
+const selectedHobbies = ref<Hobby[]>([])
+const availableHobbies = ref<Hobby[]>([])
+const newHobby = ref("")
+const selectedHobbyId = ref("")
+
+const fetchAvailableHobbies = async () => {
+  try {
+    const response = await fetch("http://localhost:8000/api/hobbies/", {
+      credentials: 'include'
+    })
+    if (response.ok) {
+      availableHobbies.value = await response.json()
+    }
+  } catch (error) {
+    toast.error("Failed to fetch hobbies")
+  }
+}
+
+const handleSignup = async () => {
+  try {
+    const csrfToken = await authStore.setCsrfToken()
+    
+    const response = await fetch("http://localhost:8000/api/signup/", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        'X-CSRFToken': csrfToken
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        name: formData.value.name,
+        email: formData.value.email,
+        password: formData.value.password,
+        hobbies: selectedHobbies.value,
+      }),
+    })
+
+    const data = await response.json()
+
+    if (data.success) {
+      toast.success(data.message)
+      await router.push("/login")
+    } else {
+      toast.error(data.message || "Signup failed.")
+    }
+  } catch (error) {
+    toast.error("An error occurred during signup.")
+  }
+}
+
+const handleExistingHobbySelect = (id: number) => {
+  const hobby = availableHobbies.value.find(h => h.id === id)
+  if (hobby && !selectedHobbies.value.some(h => h.id === hobby.id)) {
+    selectedHobbies.value.push(hobby)
+  }
+  selectedHobbyId.value = ""
+}
+
+const addNewHobby = async () => {
+  const hobbyName = newHobby.value.trim()
+  if (hobbyName && !selectedHobbies.value.some(h => h.name === hobbyName)) {
+    try {
+      const csrfToken = await authStore.setCsrfToken()
+      
+      const response = await fetch("http://localhost:8000/api/hobbies/", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          'X-CSRFToken': csrfToken
         },
-        handleExistingHobbySelect(id: number) {
-            const hobby = this.availableHobbies.find(h => h.id === id)
-            if (hobby && !this.selectedHobbies.some(h => h.id === hobby.id)) {
-                this.selectedHobbies.push(hobby)
-            }
-            this.selectedHobbyId = ""
-        },
-        async addNewHobby() {
-            const hobbyName = this.newHobby.trim()
-            if (hobbyName && !this.selectedHobbies.some(h => h.name === hobbyName)) {
-                try {
-                    const response = await fetch("http://127.0.0.1:8000/api/hobbies/", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ name: hobbyName }),
-                    })
-                    
-                    if (response.ok) {
-                        const newHobbyData = await response.json()
-                        this.selectedHobbies.push(newHobbyData)
-                        this.newHobby = ""
-                        await this.fetchAvailableHobbies()
-                    } else {
-                        toast.error("Failed to add hobby")
-                    }
-                } catch (error) {
-                    toast.error("Failed to add hobby")
-                }
-            }
-        },
-        removeHobby(hobby: Hobby) {
-            this.selectedHobbies = this.selectedHobbies.filter(h => h.id !== hobby.id);
-        }
-    },
-    mounted() {
-        console.log(this.authStore.isAuthenticated);
-        this.authStore.isAuthenticated ? this.router.push("/profile") :
-        this.fetchAvailableHobbies();
-    },
-};
+        credentials: 'include',
+        body: JSON.stringify({ name: hobbyName }),
+      })
+      
+      if (response.ok) {
+        const newHobbyData = await response.json()
+        selectedHobbies.value.push(newHobbyData)
+        newHobby.value = ""
+        await fetchAvailableHobbies()
+      } else {
+        toast.error("Failed to add hobby")
+      }
+    } catch (error) {
+      toast.error("Failed to add hobby")
+    }
+  }
+}
+
+const removeHobby = (hobby: Hobby) => {
+  selectedHobbies.value = selectedHobbies.value.filter(h => h.id !== hobby.id)
+}
+
+onMounted(async () => {
+  if (authStore.isAuthenticated) {
+    router.push("/profile")
+  } else {
+    await fetchAvailableHobbies()
+  }
+})
 </script>

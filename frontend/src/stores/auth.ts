@@ -1,36 +1,216 @@
 import { defineStore } from 'pinia'
+import { Router } from 'vue-router'
+
+interface Hobby {
+    id: number;
+    name: string;
+}
 
 interface User {
-  id: number
-  email: string
-  name: string
-  date_of_birth: string
-  hobbies: Array<{
-    id: number
-    name: string
-  }>
+    id?: number;
+    email?: string;
+    name?: string;
+    date_of_birth?: string;
+    hobbies?: Hobby[];
+    is_active?: boolean;
+}
+
+interface AuthState {
+    user: User | null;
+    isAuthenticated: boolean;
 }
 
 export const useAuthStore = defineStore('auth', {
-  state: () => ({
-    user: JSON.parse(sessionStorage.getItem('user') || 'null') as User | null, // new
-    isAuthenticated: !!sessionStorage.getItem('user') // new
-  }),
-  
-  // Storage set specifically to Session Storage. Can also be stored in Local Storage.
-  actions: {
-    setUser(userData: User) {
-      console.log('Setting user:', userData)
-      this.user = userData
-      this.isAuthenticated = true
-      sessionStorage.setItem('user', JSON.stringify(userData)) // new
-
+    state: (): AuthState => {
+        const storedState = localStorage.getItem('authState')
+        return storedState ? JSON.parse(storedState) : {
+            user: null,
+            isAuthenticated: false
+        }
     },
-    
-    logout() {
-      this.user = null
-      this.isAuthenticated = false
-      sessionStorage.removeItem('user') // new
+    actions: {
+        async setCsrfToken(): Promise<string> {
+            try {
+                console.log('Setting CSRF token...')
+                const response = await fetch('http://localhost:8000/api/set-csrf-token/', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                })
+
+                if (!response.ok) {
+                    throw new Error(`Failed to set CSRF token. Status: ${response.status}`)
+                }
+
+                // Get token from response header
+                const csrfToken = response.headers.get('X-CSRFToken')
+                if (csrfToken) {
+                    console.log('Got CSRF token from header:', csrfToken.substring(0, 5) + '...')
+                    return csrfToken
+                }
+
+                // Wait a moment for the cookie to be set
+                await new Promise(resolve => setTimeout(resolve, 500))
+
+                // Try to get token from cookie
+                const token = getCSRFToken()
+                console.log('Got CSRF token from cookie:', token.substring(0, 5) + '...')
+                return token
+            } catch (error) {
+                console.error('Failed to set CSRF token:', error)
+                throw new Error('Failed to set CSRF token. Please ensure cookies are enabled.')
+            }
+        },
+
+        async login(email: string, password: string, router: Router | null = null) {
+            try {
+                console.log('Attempting login for email:', email)
+                const csrfToken = await this.setCsrfToken()
+                
+                const response = await fetch('http://localhost:8000/api/login/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ email, password }),
+                    credentials: 'include'
+                })
+                const data = await response.json()
+                console.log('Login response:', data)
+
+                if (data.success) {
+                    console.log('Login successful')
+                    this.user = data.user
+                    this.isAuthenticated = true
+                    this.saveState()
+                    if (router) {
+                        console.log('Redirecting to home page')
+                        await router.push({name: "home"})
+                    }
+                } else {
+                    console.log('Login failed:', data.error || 'Unknown error')
+                    this.user = null
+                    this.isAuthenticated = false
+                    this.saveState()
+                }
+            } catch (error) {
+                console.error('Login error:', error)
+                this.user = null
+                this.isAuthenticated = false
+                this.saveState()
+                throw error
+            }
+        },
+
+        setUser(userData: User) {
+            this.user = userData
+            this.isAuthenticated = true
+            this.saveState()
+        },
+
+        async logout(router: Router | null = null) {
+            console.log('Attempting logout')
+            try {
+                const csrfToken = await this.setCsrfToken()
+                const response = await fetch('http://localhost:8000/api/logout/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    credentials: 'include'
+                })
+                if (response.ok) {
+                    console.log('Logout successful')
+                    this.user = null
+                    this.isAuthenticated = false
+                    this.saveState()
+                    if (router) {
+                        console.log('Redirecting to login page')
+                        await router.push({name: "login"})
+                    }
+                }
+            } catch (error) {
+                console.error('Logout failed:', error)
+                throw error
+            }
+        },
+
+        async fetchUser() {
+            try {
+                const response = await fetch('http://localhost:8000/api/user/', {
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                })
+                if (response.ok) {
+                    const data = await response.json()
+                    this.user = data
+                    this.isAuthenticated = true
+                }
+                else{
+                    this.user = null
+                    this.isAuthenticated = false
+                }
+            } catch (error) {
+                console.error('Failed to fetch user', error)
+                this.user = null
+                this.isAuthenticated = false
+            }
+            this.saveState()
+        },
+
+        saveState() {
+            /*
+            We save state to local storage to keep the
+            state when the user reloads the page.
+
+            This is a simple way to persist state. For a more robust solution,
+            use pinia-persistent-state.
+             */
+            localStorage.setItem('authState', JSON.stringify({
+                user: this.user,
+                isAuthenticated: this.isAuthenticated
+            }))
+        }
     }
-  }
-}) 
+})
+
+export function getCSRFToken(): string {
+    console.log('Checking cookies:', document.cookie)
+    
+    const name = 'csrftoken'
+    let cookieValue = null
+    
+    if (!document.cookie) {
+        console.error('No cookies available - cookies might be disabled')
+        throw new Error('Cookies are required but seem to be disabled in your browser.')
+    }
+    
+    if (document.cookie === '') {
+        console.error('Empty cookies string')
+        throw new Error('No cookies found. Please ensure third-party cookies are enabled.')
+    }
+    
+    const cookies = document.cookie.split(';')
+    console.log('Available cookies:', cookies)
+    
+    for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim()
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1))
+            break
+        }
+    }
+    
+    if (cookieValue === null) {
+        console.error('CSRF token cookie not found. Available cookies:', document.cookie)
+        throw new Error('CSRF token not found. Please check your cookie settings.')
+    }
+    
+    return cookieValue
+}
