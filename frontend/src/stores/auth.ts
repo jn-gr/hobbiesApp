@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { Router } from 'vue-router'
+import { toast } from 'vue-sonner';
 
 interface Hobby {
     id: number;
@@ -44,17 +45,13 @@ export const useAuthStore = defineStore('auth', {
                     throw new Error(`Failed to set CSRF token. Status: ${response.status}`)
                 }
 
-                // Get token from response header
                 const csrfToken = response.headers.get('X-CSRFToken')
                 if (csrfToken) {
                     console.log('Got CSRF token from header:', csrfToken.substring(0, 5) + '...')
                     return csrfToken
                 }
-
-                // Wait a moment for the cookie to be set
                 await new Promise(resolve => setTimeout(resolve, 500))
 
-                // Try to get token from cookie
                 const token = getCSRFToken()
                 console.log('Got CSRF token from cookie:', token.substring(0, 5) + '...')
                 return token
@@ -79,25 +76,25 @@ export const useAuthStore = defineStore('auth', {
                     credentials: 'include'
                 })
                 const data = await response.json()
-                console.log('Login response:', data)
 
                 if (data.success) {
-                    console.log('Login successful')
                     this.user = data.user
                     this.isAuthenticated = true
                     this.saveState()
                     if (router) {
-                        console.log('Redirecting to home page')
-                        await router.push({name: "home"})
+                        toast.success('Login successful')
+                        await router.push('/profile')
                     }
                 } else {
                     console.log('Login failed:', data.error || 'Unknown error')
+                    toast.error(data.error || 'Unknown error')
                     this.user = null
                     this.isAuthenticated = false
                     this.saveState()
                 }
             } catch (error) {
                 console.error('Login error:', error)
+                toast.error('Login failed. Please try again.')
                 this.user = null
                 this.isAuthenticated = false
                 this.saveState()
@@ -140,7 +137,7 @@ export const useAuthStore = defineStore('auth', {
 
         async fetchUser() {
             try {
-                const response = await fetch('http://localhost:8000/api/user/', {
+                const response = await fetch('http://localhost:8000/api/profile/', {
                     credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
@@ -148,8 +145,8 @@ export const useAuthStore = defineStore('auth', {
                     },
                 })
                 if (response.ok) {
-                    const data = await response.json()
-                    this.user = data
+                    const userData = await response.json()
+                    this.user = userData.data
                     this.isAuthenticated = true
                 }
                 else{
@@ -165,13 +162,6 @@ export const useAuthStore = defineStore('auth', {
         },
 
         saveState() {
-            /*
-            We save state to local storage to keep the
-            state when the user reloads the page.
-
-            This is a simple way to persist state. For a more robust solution,
-            use pinia-persistent-state.
-             */
             localStorage.setItem('authState', JSON.stringify({
                 user: this.user,
                 isAuthenticated: this.isAuthenticated

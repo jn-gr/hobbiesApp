@@ -35,8 +35,8 @@
               <Input
                 id="dob"
                 type="date"
-                :value="authStore.user?.date_of_birth || ''"
                 v-model="formData.date_of_birth"
+                :max="getCurrentDate()"
               />
             </div>
 
@@ -54,7 +54,7 @@
                     class="hover:text-destructive"
                     type="button"
                   >
-                    ×
+                    x
                   </button>
                 </div>
               </div>
@@ -143,7 +143,7 @@
               />
             </div>
 
-            <Button type="submit" variant="destructive">
+            <Button type="submit">
               Change Password
             </Button>
           </form>
@@ -190,7 +190,7 @@
 import { reactive, ref, onMounted } from "vue"
 import { useRouter } from "vue-router"
 import { useAuthStore } from "../stores/auth"
-import { toast } from "sonner"
+import { toast } from "vue-sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -233,7 +233,8 @@ const formData = reactive<ProfileFormData>({
   id: authStore.user?.id || 0,
   name: authStore.user?.name || '',
   email: authStore.user?.email || '',
-  date_of_birth: authStore.user?.date_of_birth || '',
+  date_of_birth: authStore.user?.date_of_birth ? 
+    new Date(authStore.user.date_of_birth).toISOString().split('T')[0] : '',
   hobbies: Array.isArray(authStore.user?.hobbies) ? [...authStore.user.hobbies] : [],
 })
 
@@ -414,6 +415,10 @@ const addNewHobby = async () => {
 
 const removeHobby = (hobby: Hobby) => {
   formData.hobbies = formData.hobbies.filter(h => h.id !== hobby.id)
+}
+
+const getCurrentDate = () => {
+  return new Date().toISOString().split('T')[0]
 }
 
 onMounted(() => {

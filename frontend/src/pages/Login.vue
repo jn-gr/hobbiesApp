@@ -35,16 +35,13 @@
             />
           </div>
 
-          <Alert variant="destructive" v-if="error">
-            <AlertCircle class="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>
-              {{ error }}
-            </AlertDescription>
-          </Alert>
-
-          <Button type="submit" class="w-full">
-            Sign In
+          <Button type="submit" class="w-full" :disabled="isLoading">
+            <div v-if="isLoading">
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            </div>
+            <div v-else>
+              Sign In
+            </div>
           </Button>
 
           <p class="text-center text-sm text-muted-foreground">
@@ -82,9 +79,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
-import { AlertCircle } from 'lucide-vue-next'
-import { toast } from 'sonner'
+import { toast } from 'vue-sonner'
 
 interface FormData {
   email: string
@@ -98,8 +93,11 @@ const formData = ref<FormData>({
   email: '',
   password: ''
 })
+const isLoading = ref(false)
 
 const handleLogin = async () => {
+  isLoading.value = true
+  error.value = ''
   try {
     await authStore.login(formData.value.email, formData.value.password, router)
     if (!authStore.isAuthenticated) {
@@ -108,6 +106,8 @@ const handleLogin = async () => {
   } catch (err) {
     error.value = 'An error occurred during login: ' + err
     toast.error(error.value)
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -115,3 +115,21 @@ const resetError = () => {
   error.value = ''
 }
 </script>
+
+<style scoped>
+.spinner-border {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 0.1em solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spinner-border 0.75s linear infinite;
+}
+
+@keyframes spinner-border {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+</style>
