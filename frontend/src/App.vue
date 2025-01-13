@@ -76,7 +76,7 @@ const authStore = useAuthStore();
 const router = useRouter();
 
 const avatarUrl = computed(() => {
-  return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(authStore.user?.name || 'User');
+  return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(authStore.user?.name || 'User') + '&background=random';
 });
 
 const handleLogout = async () => {
