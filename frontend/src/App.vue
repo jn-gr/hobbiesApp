@@ -30,11 +30,11 @@
             <DropdownMenuContent align="end" class="w-56">
               <DropdownMenuLabel>Signed in as {{ authStore.user?.name }}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem @click="router.push('/profile')">
+              <DropdownMenuItem @click="router.push('/profile?tab=edit')">
                 <User class="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </DropdownMenuItem>
-              <DropdownMenuItem @click="router.push('/friend-requests')">
+              <DropdownMenuItem @click="router.push('/profile?tab=friends')">
                 <UserPlus class="mr-2 h-4 w-4" />
                 <span>Friend Requests</span>
               </DropdownMenuItem>

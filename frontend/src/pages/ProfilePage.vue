@@ -1,250 +1,280 @@
 <template>
-  <div class="container mx-auto p-8 max-w-2xl">
-    <div v-if="authStore.isAuthenticated">
-      <Card>
-        <CardHeader>
-          <CardTitle>Profile Settings</CardTitle>
-          <CardDescription>
-            Manage your account settings and preferences here.
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent>
-          <form @submit.prevent="submitUpdateProfile" class="space-y-6">
-            <div class="space-y-2">
-              <Label for="name">Name</Label>
-              <Input
-                id="name"
-                v-model="formData.name"
-                :placeholder="authStore.user?.name || 'Enter your name'"
-              />
-            </div>
+  <div class="container mx-auto p-4 md:p-8">
+    <div v-if="authStore.isAuthenticated" class="grid grid-cols-12 gap-8">
+      <div class="col-span-12 md:col-span-3">
+        <div>
+          <nav class="space-y-1">
+            <button
+              v-for="item in navigationItems"
+              :key="item.id"
+              @click="item.id === 'logout' ? logout() : router.push({ query: { tab: item.id } })"
+              class="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent hover:text-black transition-colors rounded-xl"
+              :class="[
+                currentSection === item.id 
+                  ? 'bg-accent text-black' 
+                  : 'text-muted-foreground'
+              ]"
+            >
+              <component :is="item.icon" class="h-5 w-5" />
+              {{ item.label }}
+            </button>
+          </nav>
+        </div>
+      </div>
 
-            <div class="space-y-2">
-              <Label for="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                v-model="formData.email"
-                :placeholder="authStore.user?.email || 'Enter your email'"
-              />
-            </div>
-
-            <div class="space-y-2">
-              <Label for="dob">Date of Birth</Label>
-              <Input
-                id="dob"
-                type="date"
-                v-model="formData.date_of_birth"
-                :max="getCurrentDate()"
-              />
-            </div>
-
-            <div class="space-y-2">
-              <Label>Hobbies</Label>
-              <div class="flex flex-wrap gap-2 mb-2">
-                <div 
-                  v-for="hobby in formData.hobbies" 
-                  :key="hobby.id"
-                  class="bg-primary/10 text-primary px-3 py-1 rounded-full flex items-center gap-2"
-                >
-                  {{ hobby.name }}
-                  <button 
-                    @click="removeHobby(hobby)" 
-                    class="hover:text-destructive"
-                    type="button"
-                  >
-                    x
-                  </button>
+      <div class="col-span-12 md:col-span-9">
+        <div v-if="currentSection === 'edit'" class="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Edit Profile</CardTitle>
+              <CardDescription>
+                Update your personal information
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form @submit.prevent="submitUpdateProfile" class="space-y-6">
+                <div class="flex items-center gap-6 mb-8">
+                  <div class="relative">
+                    <img
+                      :src="getAvatarUrl(formData.name)"
+                      :alt="formData.name"
+                      class="rounded-full w-24 h-24 md:w-32 md:h-32 border-4 border-background shadow-xl"
+                    />
+                  </div>
                 </div>
-              </div>
-              
-              <div class="mb-4">
-                <Label>Select from existing hobbies:</Label>
-                <Select
-                  v-model="selectedHobbyId"
-                  @update:modelValue="handleExistingHobbySelect"
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose a hobby" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem
-                        v-for="hobby in availableHobbies"
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div class="md:col-span-1 space-y-6">
+                    <div class="space-y-2">
+                      <Label for="name">Name</Label>
+                      <Input
+                        id="name"
+                        v-model="formData.name"
+                        :placeholder="authStore.user?.name || 'Enter your name'"
+                      />
+                    </div>
+
+                    <div class="space-y-2">
+                      <Label for="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        v-model="formData.email"
+                        :placeholder="authStore.user?.email || 'Enter your email'"
+                      />
+                    </div>
+
+                    <div class="space-y-2">
+                      <Label for="dob">Date of Birth</Label>
+                      <Input
+                        id="dob"
+                        type="date"
+                        v-model="formData.date_of_birth"
+                        :max="getCurrentDate()"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="space-y-6">
+                    <Label>Hobbies</Label>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                      <Badge 
+                        v-for="hobby in formData.hobbies" 
                         :key="hobby.id"
-                        :value="String(hobby.id)"
+                        variant="secondary"
+                        class="flex items-center gap-1 px-3 py-1"
                       >
                         {{ hobby.name }}
-                      </SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
+                        <button 
+                          @click="removeHobby(hobby)" 
+                          class="hover:text-destructive ml-1"
+                          type="button"
+                        >
+                          <X class="h-3 w-3" />
+                        </button>
+                      </Badge>
+                      <Badge 
+                        variant="outline" 
+                        class="cursor-pointer hover:bg-secondary"
+                        @click="showHobbyDialog = true"
+                      >
+                        <Plus class="h-3 w-3 mr-1" />
+                        Add Hobby
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex justify-end">
+                  <Button type="submit" class="w-full md:w-auto">
+                    Save Changes
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+                </div>
+
+        <div v-if="currentSection === 'security'" class="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Security Settings</CardTitle>
+              <CardDescription>
+                Update your password
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form @submit.prevent="submitUpdatePassword" class="space-y-6">
+                <div class="grid gap-4">
+                  <div class="space-y-2">
+                    <Label for="oldPassword">Current Password</Label>
+                    <Input
+                      id="oldPassword"
+                      type="password"
+                      v-model="passwordData.oldPassword"
+                      placeholder="Enter current password"
+                    />
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                      <Label for="newPassword">New Password</Label>
+                      <Input
+                        id="newPassword"
+                        type="password"
+                        v-model="passwordData.newPassword"
+                        placeholder="Enter new password"
+                      />
+                    </div>
+
+                    <div class="space-y-2">
+                      <Label for="confirmPassword">Confirm Password</Label>
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        v-model="passwordData.confirmPassword"
+                        placeholder="Confirm new password"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex justify-end">
+                  <Button type="submit">
+                    Update Password
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div v-if="currentSection === 'friends'" class="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Friends</CardTitle>
               
-              <div class="flex gap-2">
-                <Input 
-                  v-model="newHobby" 
-                  placeholder="Or type a new hobby" 
-                  class="flex-1"
-                />
-                <Button 
-                  type="button" 
-                  @click="addNewHobby" 
-                  variant="outline"
+              <CardDescription class="flex items-center justify-between"><span>Manage your connections</span> <span class="flex items-center justify-center bg-accent py-1 px-3 rounded-full text-[0.6rem]">{{ friends.length }}</span></CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div v-if="friends.length === 0" class="text-center py-6 text-muted-foreground">
+                <Users class="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No friends yet</p>
+                <p class="text-sm">Start connecting with others!</p>
+              </div>
+              <div v-else class="space-y-4">
+                <div 
+                  v-for="friend in friends" 
+                  :key="friend.id" 
+                  class="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary/50 transition-colors"
                 >
-                  Add
-                </Button>
-              </div>
-            </div>
-
-            <Button type="submit">Update Profile</Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card class="mt-8">
-        <CardHeader>
-          <CardTitle>Change Password</CardTitle>
-          <CardDescription>
-            Update your password here. Please enter your current password to confirm changes.
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent>
-          <form @submit.prevent="submitUpdatePassword" class="space-y-6">
-            <div class="space-y-2">
-              <Label for="oldPassword">Current Password</Label>
-              <Input
-                id="oldPassword"
-                type="password"
-                v-model="passwordData.oldPassword"
-                placeholder="Enter current password"
-              />
-            </div>
-
-            <div class="space-y-2">
-              <Label for="newPassword">New Password</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                v-model="passwordData.newPassword"
-                placeholder="Enter new password"
-              />
-            </div>
-
-            <div class="space-y-2">
-              <Label for="confirmPassword">Confirm New Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                v-model="passwordData.confirmPassword"
-                placeholder="Confirm new password"
-              />
-            </div>
-
-            <Button type="submit">
-              Change Password
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card class="mt-8">
-        <CardHeader>
-          <CardTitle>Friends</CardTitle>
-          <CardDescription>
-            Your current friends
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div v-if="friends.length === 0" class="text-muted-foreground">
-            No friends yet
-          </div>
-          <div v-else class="space-y-2">
-            <div v-for="friend in friends" :key="friend.id" class="flex items-center justify-between p-2 rounded-lg bg-secondary/50">
-              <div>
-                <p class="font-medium">{{ friend.name }}</p>
-                <p class="text-sm text-muted-foreground">{{ friend.email }}</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card class="mt-8">
-        <CardHeader>
-          <CardTitle>Friend Requests</CardTitle>
-          <CardDescription>
-            Manage your friend requests
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div class="space-y-6">
-            <div>
-              <h3 class="font-medium mb-2">Received Requests</h3>
-              <div v-if="receivedRequests.length === 0" class="text-muted-foreground">
-                No pending requests
-              </div>
-              <div v-else class="space-y-2">
-                <div v-for="request in receivedRequests" :key="request.id" 
-                     class="flex items-center justify-between p-2 rounded-lg bg-secondary/50">
-                  <p>{{ request.from_user }}</p>
-                  <div class="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      variant="default"
-                      @click="handleFriendRequest(request.id, 'accept')"
-                    >
-                      Accept
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      @click="handleFriendRequest(request.id, 'reject')"
-                    >
-                      Reject
-                    </Button>
+                  <img
+                    :src="getAvatarUrl(friend.name)"
+                    :alt="friend.name"
+                    class="rounded-full w-10 h-10"
+                  />
+                  <div class="flex-1 min-w-0">
+                    <p class="font-medium truncate">{{ friend.name }}</p>
+                    <p class="text-sm text-muted-foreground truncate">{{ friend.email }}</p>
                   </div>
                 </div>
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            <div>
-              <h3 class="font-medium mb-2">Sent Requests</h3>
-              <div v-if="sentRequests.length === 0" class="text-muted-foreground">
-                No pending requests
-              </div>
-              <div v-else class="space-y-2">
-                <div v-for="request in sentRequests" :key="request.id" 
-                     class="flex items-center justify-between p-2 rounded-lg bg-secondary/50">
-                  <p>{{ request.to_user }}</p>
-                  <p class="text-sm text-muted-foreground">Pending</p>
+          <Card>
+            <CardHeader>
+              <CardTitle>Friend Requests</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div class="space-y-6">
+                <div>
+                  <h3 class="flex items-center justify-between font-medium text-sm text-muted-foreground mb-3"><span>Received</span> <span class="flex items-center justify-center bg-accent py-1 px-3 rounded-full text-[0.6rem]">{{receivedRequests.length}}</span></h3>
+                  <div v-if="receivedRequests.length === 0" class="text-center py-4 text-sm text-muted-foreground">
+                    No pending requests
+                  </div>
+                  <div v-else class="space-y-3">
+                    <div 
+                      v-for="request in receivedRequests" 
+                      :key="request.id"
+                      class="flex items-center gap-3 p-2 rounded-lg bg-secondary/50"
+                    >
+                      <img
+                        :src="getAvatarUrl(request.from_user || '')"
+                        :alt="request.from_user"
+                        class="rounded-full w-8 h-8"
+                      />
+                      <div class="flex-1 min-w-0">
+                        <p class="font-medium truncate">{{ request.from_user }}</p>
+                      </div>
+                      <div class="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="default"
+                          @click="handleFriendRequest(request.id, 'accept')"
+                        >
+                          Accept
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          @click="handleFriendRequest(request.id, 'reject')"
+                        >
+                          Reject
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 class="flex items-center justify-between font-medium text-sm text-muted-foreground mb-3"><span>Sent</span> <span class="flex items-center justify-center bg-accent py-1 px-3 rounded-full text-[0.6rem]">{{sentRequests.length}}</span></h3>
+                  <div v-if="sentRequests.length === 0" class="text-center py-4 text-sm text-muted-foreground">
+                    No pending requests
+                  </div>
+                  <div v-else class="space-y-3">
+                    <div 
+                      v-for="request in sentRequests" 
+                      :key="request.id"
+                      class="flex items-center gap-3 p-2 rounded-lg bg-secondary/50"
+                    >
+                      <img
+                        :src="getAvatarUrl(request.to_user || '')"
+                        :alt="request.to_user"
+                        class="rounded-full w-8 h-8"
+                      />
+                      <div class="flex-1 min-w-0">
+                        <p class="font-medium truncate">{{ request.to_user }}</p>
+                        <p class="text-sm text-muted-foreground">Pending</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card class="mt-8">
-        <CardHeader>
-          <CardTitle>Logout</CardTitle>
-          <CardDescription>
-            Sign out of your account
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent>
-          <Button 
-            variant="destructive" 
-            @click="logout" 
-            class="w-full"
-          >
-            Logout
-          </Button>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
 
     <div v-else class="text-center min-h-[calc(100svh-124px)] flex items-center justify-center p-4 bg-background">
@@ -260,12 +290,72 @@
         </CardContent>
       </Card>
     </div>
+
+    <Dialog :open="showHobbyDialog" @update:open="showHobbyDialog = false">
+      <DialogContent class="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Add Hobby</DialogTitle>
+          <DialogDescription>
+            Choose from existing hobbies or add a new one
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div class="space-y-4 py-4">
+          <div class="space-y-2">
+            <Label>Select existing hobby</Label>
+            <Select
+              v-model="selectedHobbyId"
+              @update:modelValue="handleExistingHobbySelect"
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Choose a hobby" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem
+                    v-for="hobby in availableHobbies"
+                    :key="hobby.id"
+                    :value="String(hobby.id)"
+                  >
+                    {{ hobby.name }}
+                  </SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div class="space-y-2">
+            <Label>Or add a new hobby</Label>
+            <div class="flex gap-2">
+              <Input 
+                v-model="newHobby" 
+                placeholder="Type a new hobby" 
+                class="flex-1"
+              />
+              <Button 
+                type="button" 
+                @click="addNewHobby"
+                variant="secondary"
+              >
+                Add
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" @click="showHobbyDialog = false">
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted } from "vue"
-import { useRouter } from "vue-router"
+import { reactive, ref, onMounted, watch } from "vue"
+import { useRouter, useRoute } from "vue-router"
 import { useAuthStore } from "../stores/auth"
 import { toast } from "vue-sonner"
 import { Button } from "@/components/ui/button"
@@ -286,6 +376,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
+import { 
+  User, 
+  Users, 
+  LogOut,
+  Plus, 
+  X,
+  Shield 
+} from 'lucide-vue-next'
 
 interface Hobby {
   id: number
@@ -315,6 +422,7 @@ interface Friend {
 }
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const availableHobbies = ref<Hobby[]>([])
 const newHobby = ref("")
@@ -322,6 +430,31 @@ const selectedHobbyId = ref("")
 const sentRequests = ref<FriendRequest[]>([])
 const receivedRequests = ref<FriendRequest[]>([])
 const friends = ref<Friend[]>([])
+const showHobbyDialog = ref(false)
+const currentSection = ref(route.query.tab?.toString() || 'edit')
+
+const navigationItems = [
+  {
+    id: 'edit',
+    label: 'Edit Profile',
+    icon: User
+  },
+  {
+    id: 'security',
+    label: 'Security',
+    icon: Shield
+  },
+  {
+    id: 'friends',
+    label: 'Friends',
+    icon: Users
+  },
+  {
+    id: 'logout',
+    label: 'Logout',
+    icon: LogOut
+  }
+]
 
 const formData = reactive<ProfileFormData>({
   id: authStore.user?.id || 0,
@@ -388,7 +521,6 @@ const getChangedFields = () => {
     changes.date_of_birth = formData.date_of_birth
   }
   
-  // Always include hobbies if they're present in formData
   if (formData.hobbies.length > 0) {
     changes.hobbies = formData.hobbies
   }
@@ -570,12 +702,28 @@ const handleFriendRequest = async (requestId: number, action: 'accept' | 'reject
   }
 }
 
+const getAvatarUrl = (name: string) => {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
+}
+
+watch(
+  () => route.query.tab,
+  (newTab) => {
+    currentSection.value = newTab?.toString() || 'edit'
+  }
+)
+
 onMounted(() => {
   fetchHobbies()
   if (authStore.isAuthenticated) {
     fetchUserProfile()
     fetchFriendRequests()
     fetchFriends()
+    
+    const initialTab = route.query.tab?.toString()
+    if (initialTab && ['edit', 'security', 'friends'].includes(initialTab)) {
+      currentSection.value = initialTab
+    }
   }
 })
 </script>

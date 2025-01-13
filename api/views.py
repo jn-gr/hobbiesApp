@@ -65,8 +65,18 @@ def update_profile_api(request: HttpRequest) -> JsonResponse:
             updated_fields.append('email')
             
         if 'date_of_birth' in data and data['date_of_birth'] != user.date_of_birth:
-            user.date_of_birth = data['date_of_birth'] or None
-            updated_fields.append('date_of_birth')
+            try:
+                if data['date_of_birth']:
+                    parsed_date = datetime.strptime(data['date_of_birth'], '%Y-%m-%d').date()
+                else:
+                    parsed_date = None
+                user.date_of_birth = parsed_date
+                updated_fields.append('date_of_birth')
+            except ValueError:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid date format. Please use YYYY-MM-DD'
+                }, status=400)
 
         if 'hobbies' in data:
             new_hobby_ids = set(hobby['id'] for hobby in data['hobbies'])
@@ -208,7 +218,6 @@ def signup(request):
                     "message": "Email already in use."
                 }, status=400)
             
-            # Parse date_of_birth if provided
             parsed_date = None
             if date_of_birth:
                 try:

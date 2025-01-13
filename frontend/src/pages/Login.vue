@@ -11,45 +11,44 @@
         <form @submit.prevent="handleLogin" class="space-y-6">
           <div class="space-y-2">
             <Label for="email">Email</Label>
-            <Input 
-              id="email" 
-              type="email" 
-              v-model="formData.email" 
+            <Input
+              id="email"
+              type="email"
+              v-model="formData.email"
               placeholder="Enter your email"
               class="w-full"
-              required 
+              required
               @input="resetError"
             />
           </div>
 
           <div class="space-y-2">
             <Label for="password">Password</Label>
-            <Input 
-              id="password" 
-              type="password" 
-              v-model="formData.password" 
+            <Input
+              id="password"
+              type="password"
+              v-model="formData.password"
               placeholder="Enter your password"
               class="w-full"
-              required 
+              required
               @input="resetError"
             />
           </div>
 
           <Button type="submit" class="w-full" :disabled="isLoading">
             <div v-if="isLoading">
-              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              <span
+                class="spinner-border spinner-border-sm"
+                role="status"
+                aria-hidden="true"
+              ></span>
             </div>
-            <div v-else>
-              Sign In
-            </div>
+            <div v-else>Sign In</div>
           </Button>
 
           <p class="text-center text-sm text-muted-foreground">
             Don't have an account?
-            <router-link 
-              to="/signup" 
-              class="text-primary hover:underline"
-            >
+            <router-link to="/signup" class="text-primary hover:underline">
               Create an account
             </router-link>
           </p>
@@ -72,48 +71,48 @@
 </style>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { toast } from 'vue-sonner'
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from 'vue-sonner';
 
 interface FormData {
-  email: string
-  password: string
+  email: string;
+  password: string;
 }
 
-const router = useRouter()
-const authStore = useAuthStore()
-const error = ref('')
+const router = useRouter();
+const authStore = useAuthStore();
+const error = ref('');
 const formData = ref<FormData>({
   email: '',
-  password: ''
-})
-const isLoading = ref(false)
+  password: '',
+});
+const isLoading = ref(false);
 
 const handleLogin = async () => {
-  isLoading.value = true
-  error.value = ''
+  isLoading.value = true;
+  error.value = '';
   try {
-    await authStore.login(formData.value.email, formData.value.password, router)
+    await authStore.login(formData.value.email, formData.value.password, router);
     if (!authStore.isAuthenticated) {
-      error.value = 'Login failed. Please check your credentials.'
+      error.value = 'Login failed. Please check your credentials.';
     }
   } catch (err) {
-    error.value = 'An error occurred during login: ' + err
-    toast.error(error.value)
+    error.value = 'An error occurred during login: ' + err;
+    toast.error(error.value);
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
+};
 
 const resetError = () => {
-  error.value = ''
-}
+  error.value = '';
+};
 </script>
 
 <style scoped>
