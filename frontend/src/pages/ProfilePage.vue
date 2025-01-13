@@ -152,6 +152,83 @@
 
       <Card class="mt-8">
         <CardHeader>
+          <CardTitle>Friends</CardTitle>
+          <CardDescription>
+            Your current friends
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div v-if="friends.length === 0" class="text-muted-foreground">
+            No friends yet
+          </div>
+          <div v-else class="space-y-2">
+            <div v-for="friend in friends" :key="friend.id" class="flex items-center justify-between p-2 rounded-lg bg-secondary/50">
+              <div>
+                <p class="font-medium">{{ friend.name }}</p>
+                <p class="text-sm text-muted-foreground">{{ friend.email }}</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card class="mt-8">
+        <CardHeader>
+          <CardTitle>Friend Requests</CardTitle>
+          <CardDescription>
+            Manage your friend requests
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div class="space-y-6">
+            <div>
+              <h3 class="font-medium mb-2">Received Requests</h3>
+              <div v-if="receivedRequests.length === 0" class="text-muted-foreground">
+                No pending requests
+              </div>
+              <div v-else class="space-y-2">
+                <div v-for="request in receivedRequests" :key="request.id" 
+                     class="flex items-center justify-between p-2 rounded-lg bg-secondary/50">
+                  <p>{{ request.from_user }}</p>
+                  <div class="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="default"
+                      @click="handleFriendRequest(request.id, 'accept')"
+                    >
+                      Accept
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      @click="handleFriendRequest(request.id, 'reject')"
+                    >
+                      Reject
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 class="font-medium mb-2">Sent Requests</h3>
+              <div v-if="sentRequests.length === 0" class="text-muted-foreground">
+                No pending requests
+              </div>
+              <div v-else class="space-y-2">
+                <div v-for="request in sentRequests" :key="request.id" 
+                     class="flex items-center justify-between p-2 rounded-lg bg-secondary/50">
+                  <p>{{ request.to_user }}</p>
+                  <p class="text-sm text-muted-foreground">Pending</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card class="mt-8">
+        <CardHeader>
           <CardTitle>Logout</CardTitle>
           <CardDescription>
             Sign out of your account
@@ -223,11 +300,28 @@ interface ProfileFormData {
   hobbies: Hobby[]
 }
 
+interface FriendRequest {
+  id: number
+  from_user?: string
+  to_user?: string
+  status: string
+  created_at: string
+}
+
+interface Friend {
+  id: number
+  name: string
+  email: string
+}
+
 const router = useRouter()
 const authStore = useAuthStore()
 const availableHobbies = ref<Hobby[]>([])
 const newHobby = ref("")
 const selectedHobbyId = ref("")
+const sentRequests = ref<FriendRequest[]>([])
+const receivedRequests = ref<FriendRequest[]>([])
+const friends = ref<Friend[]>([])
 
 const formData = reactive<ProfileFormData>({
   id: authStore.user?.id || 0,
@@ -421,10 +515,67 @@ const getCurrentDate = () => {
   return new Date().toISOString().split('T')[0]
 }
 
+const fetchFriendRequests = async () => {
+  try {
+    const sentResponse = await fetch('http://localhost:8000/api/friend_requests/sent/', {
+      credentials: 'include'
+    })
+    if (sentResponse.ok) {
+      const data = await sentResponse.json()
+      sentRequests.value = data.sent_requests
+    }
+
+    const receivedResponse = await fetch('http://localhost:8000/api/friend_requests/received/', {
+      credentials: 'include'
+    })
+    if (receivedResponse.ok) {
+      const data = await receivedResponse.json()
+      receivedRequests.value = data.received_requests
+    }
+  } catch (error) {
+    toast.error('Failed to fetch friend requests')
+  }
+}
+
+const fetchFriends = async () => {
+  try {
+    const response = await fetch('http://localhost:8000/api/friends/', {
+      credentials: 'include'
+    })
+    if (response.ok) {
+      const data = await response.json()
+      friends.value = data.friends
+    }
+  } catch (error) {
+    toast.error('Failed to fetch friends list')
+  }
+}
+
+const handleFriendRequest = async (requestId: number, action: 'accept' | 'reject') => {
+  try {
+    const response = await fetch(`http://localhost:8000/api/friend_requests/${action}/${requestId}/`, {
+      method: 'POST',
+      credentials: 'include'
+    })
+    
+    if (response.ok) {
+      toast.success(`Friend request ${action}ed`)
+      await fetchFriendRequests()
+      await fetchFriends()
+    } else {
+      toast.error(`Failed to ${action} friend request`)
+    }
+  } catch (error) {
+    toast.error(`Failed to ${action} friend request`)
+  }
+}
+
 onMounted(() => {
   fetchHobbies()
   if (authStore.isAuthenticated) {
     fetchUserProfile()
+    fetchFriendRequests()
+    fetchFriends()
   }
 })
 </script>

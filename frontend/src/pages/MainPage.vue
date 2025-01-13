@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { UserPlus, Compass } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
+import { toast } from 'vue-sonner'
 
 interface User {
   id: number
@@ -87,8 +88,23 @@ const getAvatarUrl = (name: string) => {
 }
 
 const sendFriendRequest = async (userId: number) => {
-  // TODO: Implement friend request functionality
-  console.log('Send friend request to:', userId)
+  try {
+    const response = await fetch(`http://localhost:8000/api/friend_requests/send/${userId}/`, {
+      method: 'POST',
+      credentials: 'include',
+    })
+    
+    if (response.ok) {
+      toast.success('Friend request sent!')
+      // Refresh the users list to update the UI
+      await fetchUsers()
+    } else {
+      const data = await response.json()
+      toast.error(data.error || 'Failed to send friend request')
+    }
+  } catch (error) {
+    toast.error('Failed to send friend request')
+  }
 }
 
 onMounted(async () => {
