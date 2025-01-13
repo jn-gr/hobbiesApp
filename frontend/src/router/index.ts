@@ -11,17 +11,14 @@ import Login from '../pages/Login.vue';
 
 let base = (import.meta.env.MODE == 'development') ? import.meta.env.BASE_URL : ''
 
-// 2. Define some routes
-// Each route should map to a component.
-// We'll talk about nested routes later.
 const router = createRouter({
     history: createWebHistory(base),
     routes: [
-        { path: '/', name: 'Main Page', component: MainPage },
-        { path: '/profile/', name: 'Profile Page', component: ProfilePage },
-        { path: '/signup/', name: 'Signup', component: SignUp},
-        { path: '/login/', name: 'Login', component: Login},
-    ]
+    { path: '/', name: 'Main Page', component: MainPage },
+    { path: '/profile/', name: 'Profile Page', component: ProfilePage },
+    { path: '/signup/', name: 'Signup', component: SignUp},
+    { path: '/login/', name: 'Login', component: Login},
+]
 })
 
 export default router

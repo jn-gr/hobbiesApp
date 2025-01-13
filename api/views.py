@@ -1,30 +1,38 @@
 from typing import Any, Dict
 from django.http import JsonResponse, HttpRequest
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from django.contrib.auth import update_session_auth_hash, login, authenticate
+from django.contrib.auth import update_session_auth_hash, login, logout, authenticate
 from .models import CustomUser, Hobby
 import json
-from django.core.paginator import Paginator
-from django.db.models import Count, Q, F
-from datetime import date
+from django.db.models import Count, Q
+from datetime import date, timedelta, datetime
 from django.shortcuts import get_object_or_404
 from .models import FriendRequest
+from typing import List, TypedDict
+from django.middleware.csrf import get_token
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.http import require_http_methods
+
+@ensure_csrf_cookie
+def set_csrf_token(request):
+    response = JsonResponse({"details": "CSRF cookie set"})
+    response['X-CSRFToken'] = get_token(request)  # Explicitly set the token
+    return response
 
 # Render the main SPA
 def main_spa(request: HttpRequest) -> JsonResponse:
     return render(request, 'api/spa/index.html', {})
 
-
 # Fetch the current user's profile data
 @login_required
+@csrf_exempt
 def profile_api(request: HttpRequest) -> JsonResponse:
     if request.method == "GET":
         user: CustomUser = request.user
         data: Dict[str, Any] = {
-            "id": user.id,
             "name": user.name,
             "email": user.email,
             "date_of_birth": user.date_of_birth.isoformat() if user.date_of_birth else "",
@@ -33,8 +41,7 @@ def profile_api(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"success": True, "data": data})
     return JsonResponse({"success": False, "message": "Invalid request method."}, status=405)
 
-
-# Update the user's profile
+# Update the current user's profile data
 @login_required
 @require_POST
 @csrf_exempt
@@ -42,26 +49,67 @@ def update_profile_api(request: HttpRequest) -> JsonResponse:
     try:
         data = json.loads(request.body)
         user: CustomUser = request.user
-        user.name = data.get("name", user.name)
-        user.email = data.get("email", user.email)
-        user.date_of_birth = data.get("date_of_birth", user.date_of_birth)
+        updated_fields = []
 
-        # Update hobbies
-        hobbies_ids = data.get("hobbies", [])
-        hobbies = Hobby.objects.filter(id__in=hobbies_ids)
-        user.hobbies.set(hobbies)
+        if 'name' in data and data['name'] != user.name:
+            user.name = data['name']
+            updated_fields.append('name')
+            
+        if 'email' in data and data['email'] != user.email:
+            if CustomUser.objects.filter(email=data['email']).exclude(id=user.id).exists():
+                return JsonResponse({
+                    "success": False, 
+                    "message": "Email already in use."
+                }, status=400)
+            user.email = data['email']
+            updated_fields.append('email')
+            
+        if 'date_of_birth' in data and data['date_of_birth'] != user.date_of_birth:
+            user.date_of_birth = data['date_of_birth'] or None
+            updated_fields.append('date_of_birth')
 
-        user.save()
-        updated_data = {
-            "id": user.id,
-            "name": user.name,
-            "email": user.email,
-            "date_of_birth": user.date_of_birth.isoformat() if user.date_of_birth else "",
-            "hobbies": list(user.hobbies.values('id', 'name')),
-        }
-        return JsonResponse({"success": True, "message": "Profile updated successfully.", "data": updated_data})
+        if 'hobbies' in data:
+            new_hobby_ids = set(hobby['id'] for hobby in data['hobbies'])
+            current_hobby_ids = set(user.hobbies.values_list('id', flat=True))
+            
+            if new_hobby_ids != current_hobby_ids:
+                hobbies = Hobby.objects.filter(id__in=new_hobby_ids)
+                user.hobbies.set(hobbies)
+                updated_fields.append('hobbies')
+
+        if updated_fields:
+            user.save()
+            
+            updated_data = {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "date_of_birth": user.date_of_birth.isoformat() if user.date_of_birth else "",
+                "hobbies": list(user.hobbies.values('id', 'name')),
+            }
+            return JsonResponse({
+                "success": True, 
+                "message": f"Updated: {', '.join(updated_fields)}",
+                "data": updated_data
+            })
+        else:
+            return JsonResponse({
+                "success": True, 
+                "message": "No changes detected",
+                "data": {
+                    "id": user.id,
+                    "name": user.name,
+                    "email": user.email,
+                    "date_of_birth": user.date_of_birth.isoformat() if user.date_of_birth else "",
+                    "hobbies": list(user.hobbies.values('id', 'name')),
+                }
+            })
+            
     except Exception as e:
-        return JsonResponse({"success": False, "errors": str(e)}, status=400)
+        return JsonResponse({
+            "success": False, 
+            "errors": str(e)
+        }, status=400)
 
 
 # Update the user's password
@@ -125,103 +173,135 @@ def add_hobby(request):
             return JsonResponse({"success": False, "message": str(e)}, status=400)
     return JsonResponse({"success": False, "message": "Invalid Request."}, status=405)
 
+class HobbyDict(TypedDict):
+    id: int
+    name: str
 
 @csrf_exempt
 def signup(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            print(f"Signup Data Received: {data}")
             
-             
-            name = data.get('name')
-            email = data.get('email')
-            password = data.get('password')
-            hobbies = data.get('hobbies', [])
+            name: str = data.get('name')
+            email: str = data.get('email')
+            password: str = data.get('password')
+            date_of_birth: str = data.get('date_of_birth')
+            hobbies: List[HobbyDict] = data.get('hobbies', [])
+            hobby_names: List[str] = [hobby.get('name') for hobby in hobbies]
             
-            print(f"Signup Attempt - Name: {name}, Email: {email}, Password: {password}, Hobbies: {hobbies}")
+            if not all([name, email, password]):
+                return JsonResponse({
+                    'success': False, 
+                    "message": "Name, email, and password are required."
+                }, status=400)
             
-            
-            if not hobbies:
-                return JsonResponse({'success': False, "message": "Please enter at least one hobby."}, status = 400 )
+            if not hobby_names:
+                return JsonResponse({
+                    'success': False, 
+                    "message": "Please enter at least one hobby."
+                }, status=400)
             
             if CustomUser.objects.filter(email=email).exists():
-                return JsonResponse({'success': False, "message": "Email already in use."}, status=400)
+                return JsonResponse({
+                    'success': False, 
+                    "message": "Email already in use."
+                }, status=400)
             
+            # Parse date_of_birth if provided
+            parsed_date = None
+            if date_of_birth:
+                try:
+                    parsed_date = datetime.strptime(date_of_birth, '%Y-%m-%d').date()
+                except ValueError:
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'Invalid date format. Please use YYYY-MM-DD'
+                    }, status=400)
+            
+            user = CustomUser.objects.create_user(
+                email=email,
+                name=name,
+                password=password,
+                date_of_birth=parsed_date
+            )
 
-            user = CustomUser.objects.create_user(email=email, name=name, password=password)
-            user.save()
-            
-            for hobby_name in hobbies:
-                hobby_name = hobby_name.strip()  # Clean up whitespace
-                if hobby_name:  # Ignore empty strings
-                    hobby, created = Hobby.objects.get_or_create(name=hobby_name)
+            for hobby_name in hobby_names:
+                hobby_name = hobby_name.strip()
+                if hobby_name:
+                    hobby, _ = Hobby.objects.get_or_create(name=hobby_name)
                     user.hobbies.add(hobby)
-                    print(f"Hobby Added: {hobby}")
-            print(f"User Created: {user}")
             
             login(request, user)
-            return JsonResponse({'success': True, "message": "Successful Sign Up"})
+
+            user_data = {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "date_of_birth": user.date_of_birth.isoformat() if user.date_of_birth else "",
+                "hobbies": list(user.hobbies.values('id', 'name')),
+            }
+            return JsonResponse({
+                'success': True, 
+                "message": "Successful Sign Up",
+                "user": user_data
+            })
+            
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'success': False, 
+                "message": "Invalid JSON data."
+            }, status=400)
         except Exception as e:
-            print("Exception during signup:", str(e))
-            return JsonResponse({'success': False, "message": str(e)}, status=400)
-    return JsonResponse({'success': False, "message": "Invalid Request."}, status=405)
+            return JsonResponse({
+                'success': False, 
+                "message": str(e)
+            }, status=400)
+            
+    return JsonResponse({
+        'success': False, 
+        "message": "Invalid Request Method."
+    }, status=405)
 
 
 @csrf_exempt
 def user_login(request):
     if request.method == "POST":
         try:
-            print("Request body:", request.body)
-            
             data = json.loads(request.body)
             email = data.get("email")
             password = data.get("password")
+            if email is None or password is None:
+                return JsonResponse({'detail': 'Please provide email and password.'}, status=400)
 
-            print(f"Login Attempt - Email: {email}, Password: {password}")
+            print(f"Attempting to authenticate user: {email}")
 
             user = authenticate(request, username=email, password=password)
+            if user is None:
+                return JsonResponse({'detail': 'Invalid credentials.'}, status=400)
+            print(f"Authenticated User: {user}")
 
             if user:
+                if not user.is_active:
+                    return JsonResponse({"success": False, "message": "User account is inactive."}, status=403)
+
                 login(request, user)
-                print(f"Login Successful for: {user}")
-                return JsonResponse({"success": True, "message": "Successful Login."})
-            print("Authentication Failed")
-            return JsonResponse({"success": False, "message": "Cannot Authenticate User"}, status=400)
+                user_data = {
+                    "id": user.id,
+                    "name": user.name,
+                    "email": user.email,
+                    "date_of_birth": user.date_of_birth.isoformat() if user.date_of_birth else "",
+                    "hobbies": list(user.hobbies.values('id', 'name')),
+                }
+                return JsonResponse({"success": True, "message": "Successful Login.", "user": user_data})
+            
+            return JsonResponse({"success": False, "message": "Cannot Authenticate User"}, status=403)
         except Exception as e:
-            print("Exception during login:", str(e)) 
+            print(f"Error in login: {e}")
             return JsonResponse({"success": False, "message": str(e)}, status=400)
     return JsonResponse({"success": False, "message": "Invalid Request."}, status=405)
 
 
-@csrf_exempt
-@login_required
-def similar_users(request):
-    current_user = request.user
-    user_hobbies = set(current_user.hobbies.values_list('id', flat=True))
-
-    # Calculate similarity scores
-    users = CustomUser.objects.exclude(id=current_user.id).annotate(
-        common_hobbies=Count('hobbies', filter=Q(hobbies__id__in=user_hobbies))
-    ).order_by('-common_hobbies')
-
-    # Pagination
-    paginator = Paginator(users, 10)
-    page_number = request.GET.get('page', 1)
-    page_obj = paginator.get_page(page_number)
-
-    users_data = [
-        {
-            'id': user.id,
-            'name': user.name,
-            'common_hobbies': user.hobbies,
-            'age': user.date_of_birth,
-        }
-        for user in page_obj
-    ]
-
-    return JsonResponse({'users': users_data, 'has_next': page_obj.has_next()}, safe=False)
-
 
 @csrf_exempt
 @login_required
@@ -229,46 +309,50 @@ def similar_users(request):
     current_user = request.user
     user_hobbies = set(current_user.hobbies.values_list('id', flat=True))
 
-    # Calculate similarity scores based on hobbies
     users = CustomUser.objects.exclude(id=current_user.id).annotate(
         common_hobbies=Count('hobbies', filter=Q(hobbies__id__in=user_hobbies))
     ).order_by('-common_hobbies')
 
-    # Age filtering
     age_min = request.GET.get('age_min')
     age_max = request.GET.get('age_max')
     today = date.today()
 
-    # Add age calculation as an annotation
-    users = users.annotate(
-        age=(today.year - F('date_of_birth__year') - ((today.month, today.day) < (F('date_of_birth__month'), F('date_of_birth__day'))))
-    )
-
     if age_min:
-        users = users.filter(age__gte=int(age_min))
+        users = users.filter(date_of_birth__lte=today - timedelta(days=int(age_min)*365))
     if age_max:
-        users = users.filter(age__lte=int(age_max))
+        users = users.filter(date_of_birth__gte=today - timedelta(days=int(age_max)*365))
 
-    # Pagination
+    total_count = users.count()
+
     page = int(request.GET.get('page', 1))
-    per_page = 10
+    per_page = 9
     start = (page - 1) * per_page
     end = start + per_page
     users_paginated = users[start:end]
-    has_next = users.count() > end
 
-    # Prepare data
+    friend_ids = set(current_user.friends.values_list('id', flat=True))
+    sent_request_ids = set(current_user.sent_requests.filter(
+        status='pending'
+    ).values_list('to_user_id', flat=True))
+
     users_data = [
         {
             'id': user.id,
             'name': user.name,
             'common_hobbies': user.common_hobbies,
-            'age': user.age,
+            'age': (today - user.date_of_birth).days // 365 if user.date_of_birth else None,
+            'isFriend': user.id in friend_ids,
+            'requestSent': user.id in sent_request_ids,
         }
         for user in users_paginated
     ]
 
-    return JsonResponse({'users': users_data, 'has_next': has_next}, safe=False)
+    return JsonResponse({
+        'users': users_data,
+        'total_count': total_count,
+        'page': page,
+        'per_page': per_page
+    }, safe=False)
 
 
 @csrf_exempt
@@ -331,3 +415,31 @@ def reject_friend_request(request, request_id):
     friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user, status='pending')
     friend_request.reject()
     return JsonResponse({'message': 'Friend request rejected!'})
+
+
+@csrf_exempt
+def user_logout(request: HttpRequest) -> JsonResponse:
+    if request.method == "POST":
+        if not request.user.is_authenticated:
+            return JsonResponse({'detail': 'You\'re not logged in.'}, status=400)
+        
+        logout(request)
+        return JsonResponse({
+            "success": True,
+            "message": "Logged out successfully"
+        })
+    return JsonResponse({
+        "success": False,
+        "message": "Invalid request method"
+    }, status=405)
+
+@require_http_methods(['GET'])
+def user(request):
+    print(request.user)
+    if request.user.is_authenticated:
+        return JsonResponse(
+            {'email': request.user.email}
+        )
+    return JsonResponse(
+        {'message': 'Not logged in'}, status=401
+    )
