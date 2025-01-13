@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen flex flex-col">
     <header class="border-b">
-      <div class="container flex h-14 items-center px-4">
+      <div class="container flex h-14 items-center justify-between">
         <router-link to="/" class="flex items-center">
           <img 
             src="/logo.png" 
@@ -10,22 +10,7 @@
           />
         </router-link>
 
-        <nav class="flex-1 flex justify-center items-center space-x-6 text-sm font-medium">
-          <router-link
-            to="/"
-            class="transition-colors hover:text-primary"
-          >
-            Home
-          </router-link>
-          <router-link
-            :to="{name: 'Profile Page'}"
-            class="transition-colors hover:text-primary"
-          >
-            Profile
-          </router-link>
-        </nav>
-
-        <div class="flex items-center space-x-4">
+        <div class="flex items-center">
           <router-link
             v-if="!authStore.isAuthenticated"
             to="/login"
@@ -33,17 +18,33 @@
           >
             Login
           </router-link>
-          <router-link
-            v-else
-            to="/profile"
-            class="text-sm font-medium rounded-full"
-          >
-            <img
+          
+          <DropdownMenu v-else>
+            <DropdownMenuTrigger>
+              <img
                 :src="avatarUrl"
                 alt="User Avatar"
-                class="size-8 rounded-full"
-            />
-          </router-link>
+                class="size-8 rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+              />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" class="w-56">
+              <DropdownMenuLabel>Signed in as {{ authStore.user?.name }}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem @click="router.push('/profile')">
+                <User class="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem @click="router.push('/friend-requests')">
+                <UserPlus class="mr-2 h-4 w-4" />
+                <span>Friend Requests</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem @click="handleLogout">
+                <LogOut class="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
@@ -52,12 +53,24 @@
       <RouterView />
     </main>
   </div>
+
+  <Toaster richColors />
 </template>
 
 <script setup lang="ts">
 import { onMounted, computed } from 'vue';
 import { useAuthStore } from './stores/auth';
 import { useRouter } from 'vue-router';
+import { User, UserPlus, LogOut } from 'lucide-vue-next';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { Toaster } from 'vue-sonner';
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -65,6 +78,14 @@ const router = useRouter();
 const avatarUrl = computed(() => {
   return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(authStore.user?.name || 'User');
 });
+
+const handleLogout = async () => {
+  try {
+    await authStore.logout(router);
+  } catch (error) {
+    console.error('Logout failed:', error);
+  }
+};
 
 onMounted(async () => {
   await authStore.fetchUser();
