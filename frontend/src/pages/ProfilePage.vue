@@ -473,7 +473,13 @@ const passwordData = reactive({
 
 const fetchHobbies = async (): Promise<void> => {
   try {
-    const response = await fetch("http://127.0.0.1:8000/api/hobbies/")
+    const csrfToken = await authStore.setCsrfToken()
+    const response = await fetch("http://localhost:8000/api/hobbies/", {
+      credentials: 'include',
+      headers: {
+        'X-CSRFToken': csrfToken
+      }
+    })
     if (response.ok) {
       const data = await response.json()
       availableHobbies.value = data
@@ -662,8 +668,13 @@ const getCurrentDate = () => {
 
 const fetchFriendRequests = async () => {
   try {
+    const csrfToken = await authStore.setCsrfToken()
+    
     const sentResponse = await fetch('http://localhost:8000/api/friend_requests/sent/', {
-      credentials: 'include'
+      credentials: 'include',
+      headers: {
+        'X-CSRFToken': csrfToken
+      }
     })
     if (sentResponse.ok) {
       const data = await sentResponse.json()
@@ -671,7 +682,10 @@ const fetchFriendRequests = async () => {
     }
 
     const receivedResponse = await fetch('http://localhost:8000/api/friend_requests/received/', {
-      credentials: 'include'
+      credentials: 'include',
+      headers: {
+        'X-CSRFToken': csrfToken
+      }
     })
     if (receivedResponse.ok) {
       const data = await receivedResponse.json()
@@ -684,8 +698,12 @@ const fetchFriendRequests = async () => {
 
 const fetchFriends = async () => {
   try {
+    const csrfToken = await authStore.setCsrfToken()
     const response = await fetch('http://localhost:8000/api/friends/', {
-      credentials: 'include'
+      credentials: 'include',
+      headers: {
+        'X-CSRFToken': csrfToken
+      }
     })
     if (response.ok) {
       const data = await response.json()
@@ -698,9 +716,13 @@ const fetchFriends = async () => {
 
 const handleFriendRequest = async (requestId: number, action: 'accept' | 'reject') => {
   try {
+    const csrfToken = await authStore.setCsrfToken()
     const response = await fetch(`http://localhost:8000/api/friend_requests/${action}/${requestId}/`, {
       method: 'POST',
-      credentials: 'include'
+      credentials: 'include',
+      headers: {
+        'X-CSRFToken': csrfToken
+      }
     })
     
     if (response.ok) {

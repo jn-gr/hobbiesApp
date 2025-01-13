@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { UserPlus, Compass } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
+import { useAuthStore } from '../stores/auth'
 
 interface User {
   id: number
@@ -25,6 +26,7 @@ const currentPage = ref(1)
 const ageMin = ref('')
 const ageMax = ref('')
 const isLoading = ref(false)
+const authStore = useAuthStore()
 
 onMounted(() => {
   const { page, age_min, age_max } = route.query
@@ -44,15 +46,16 @@ const fetchUsers = async () => {
     if (ageMin.value) params.append('age_min', ageMin.value)
     if (ageMax.value) params.append('age_max', ageMax.value)
     
-    console.log('Fetching users with params:', params.toString())
-    
+    const csrfToken = await authStore.setCsrfToken()
     const response = await fetch(`http://localhost:8000/api/similar_users/?${params}`, {
-      credentials: 'include'
+      credentials: 'include',
+      headers: {
+        'X-CSRFToken': csrfToken
+      }
     })
     
     if (response.ok) {
       const data = await response.json()
-      console.log('Received users data:', data)
       users.value = data.users
       totalPages.value = Math.ceil(data.total_count / 9)
 
@@ -89,14 +92,17 @@ const getAvatarUrl = (name: string) => {
 
 const sendFriendRequest = async (userId: number) => {
   try {
+    const csrfToken = await authStore.setCsrfToken()
     const response = await fetch(`http://localhost:8000/api/friend_requests/send/${userId}/`, {
       method: 'POST',
       credentials: 'include',
+      headers: {
+        'X-CSRFToken': csrfToken
+      }
     })
     
     if (response.ok) {
       toast.success('Friend request sent!')
-      // Refresh the users list to update the UI
       await fetchUsers()
     } else {
       const data = await response.json()
@@ -154,7 +160,6 @@ onMounted(async () => {
       </p>
     </div>
 
-    <!-- User Grid -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <Card v-for="user in users" :key="user.id" class="relative">
         <Button
@@ -206,7 +211,6 @@ onMounted(async () => {
       </Card>
     </div>
 
-    <!-- Pagination -->
     <div class="mt-8 flex justify-end items-center gap-2">
       <Button
         variant="outline"

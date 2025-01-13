@@ -31,7 +31,6 @@ def main_spa(request: HttpRequest) -> JsonResponse:
 
 # Fetch the current user's profile data
 @login_required
-@csrf_exempt
 def profile_api(request: HttpRequest) -> JsonResponse:
     if request.method == "GET":
         user: CustomUser = request.user
@@ -48,7 +47,6 @@ def profile_api(request: HttpRequest) -> JsonResponse:
 # Update the current user's profile data
 @login_required
 @require_POST
-@csrf_exempt
 def update_profile_api(request: HttpRequest) -> JsonResponse:
     try:
         data = json.loads(request.body)
@@ -129,7 +127,6 @@ def update_profile_api(request: HttpRequest) -> JsonResponse:
 # Update the user's password
 @login_required
 @require_POST
-@csrf_exempt
 def update_password_api(request: HttpRequest) -> JsonResponse:
     try:
         data = json.loads(request.body)
@@ -175,7 +172,6 @@ def update_password_api(request: HttpRequest) -> JsonResponse:
 
 
 # Fetch all hobbies
-@csrf_exempt
 def hobbies_api(request: HttpRequest) -> JsonResponse:
     if request.method == "GET":
         hobbies = Hobby.objects.all().values("id", "name")
@@ -196,7 +192,6 @@ def hobbies_api(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"error": "Invalid request method."}, status=405)
 
 
-@csrf_exempt
 @login_required
 def add_hobby(request):
     if request.method == "POST":
@@ -221,7 +216,6 @@ class HobbyDict(TypedDict):
     name: str
 
 
-@csrf_exempt
 def signup(request):
     if request.method == "POST":
         try:
@@ -307,7 +301,6 @@ def signup(request):
     }, status=405)
 
 
-@csrf_exempt
 def user_login(request):
     if request.method == "POST":
         try:
@@ -346,7 +339,6 @@ def user_login(request):
 
 
 
-@csrf_exempt
 @login_required
 def similar_users(request):
     current_user = request.user
@@ -398,7 +390,6 @@ def similar_users(request):
     }, safe=False)
 
 
-@csrf_exempt
 @login_required
 def list_friends(request):
     user = request.user
@@ -407,7 +398,6 @@ def list_friends(request):
     return JsonResponse({'friends': friends_data}, safe=False)
 
 
-@csrf_exempt
 @login_required
 def list_sent_requests(request):
     user = request.user
@@ -419,7 +409,6 @@ def list_sent_requests(request):
     return JsonResponse({'sent_requests': sent_requests_data}, safe=False)
 
 
-@csrf_exempt
 @login_required
 def list_received_requests(request):
     user = request.user
@@ -431,7 +420,6 @@ def list_received_requests(request):
     return JsonResponse({'received_requests': received_requests_data}, safe=False)
 
 
-@csrf_exempt
 @login_required
 def send_friend_request(request, user_id):
     to_user = get_object_or_404(CustomUser, id=user_id)
@@ -444,7 +432,6 @@ def send_friend_request(request, user_id):
     return JsonResponse({'message': 'Friend request sent successfully!'})
 
 
-@csrf_exempt
 @login_required
 def accept_friend_request(request, request_id):
     friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user, status='pending')
@@ -452,7 +439,6 @@ def accept_friend_request(request, request_id):
     return JsonResponse({'message': 'Friend request accepted!'})
 
 
-@csrf_exempt
 @login_required
 def reject_friend_request(request, request_id):
     friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user, status='pending')
@@ -460,7 +446,6 @@ def reject_friend_request(request, request_id):
     return JsonResponse({'message': 'Friend request rejected!'})
 
 
-@csrf_exempt
 def user_logout(request: HttpRequest) -> JsonResponse:
     if request.method == "POST":
         if not request.user.is_authenticated:
