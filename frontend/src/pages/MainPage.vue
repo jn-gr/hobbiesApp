@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-// import { useAuthStore } from '../stores/auth'
-// import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -18,9 +16,6 @@ interface User {
   requestSent: boolean
 }
 
-// const authStore = useAuthStore()
-// const router = useRouter()
-
 const route = useRoute()
 const router = useRouter()
 const users = ref<User[]>([])
@@ -30,7 +25,6 @@ const ageMin = ref('')
 const ageMax = ref('')
 const isLoading = ref(false)
 
-// Initialize from URL params
 onMounted(() => {
   const { page, age_min, age_max } = route.query
   currentPage.value = Number(page) || 1
@@ -59,9 +53,8 @@ const fetchUsers = async () => {
       const data = await response.json()
       console.log('Received users data:', data)
       users.value = data.users
-      totalPages.value = Math.ceil(data.total_count / 9) // Assuming 9 per page
-      
-      // Update URL with current filters
+      totalPages.value = Math.ceil(data.total_count / 9)
+
       router.push({
         query: {
           ...(currentPage.value > 1 && { page: currentPage.value }),
@@ -80,7 +73,7 @@ const fetchUsers = async () => {
 }
 
 const applyFilters = () => {
-  currentPage.value = 1 // Reset to first page when filters change
+  currentPage.value = 1 
   fetchUsers()
 }
 
