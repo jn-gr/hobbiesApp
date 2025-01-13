@@ -10,13 +10,15 @@ urlpatterns = [
 
     # csrf
     path('set-csrf-token/', views.set_csrf_token, name='set_csrf_token'),
-    path('user/', views.user, name='user'), # temp
 
     # Profile
     path("profile/", views.profile_api, name="profile_api"),
     path("profile/update/", views.update_profile_api, name="profile_api"),
+
+    # Password
+    path("profile/password/update/", views.update_password_api, name="update_password"),
     
-    # idek bro
+    # hobbies
     path("hobbies/", views.hobbies_api, name="hobbies"),
     path("hobbies/add/", views.add_hobby, name="add_hobby"),
 

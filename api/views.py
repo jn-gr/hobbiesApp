@@ -16,15 +16,18 @@ from django.middleware.csrf import get_token
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 
+
 @ensure_csrf_cookie
 def set_csrf_token(request):
     response = JsonResponse({"details": "CSRF cookie set"})
     response['X-CSRFToken'] = get_token(request)  # Explicitly set the token
     return response
 
+
 # Render the main SPA
 def main_spa(request: HttpRequest) -> JsonResponse:
     return render(request, 'api/spa/index.html', {})
+
 
 # Fetch the current user's profile data
 @login_required
@@ -40,6 +43,7 @@ def profile_api(request: HttpRequest) -> JsonResponse:
         }
         return JsonResponse({"success": True, "data": data})
     return JsonResponse({"success": False, "message": "Invalid request method."}, status=405)
+
 
 # Update the current user's profile data
 @login_required
@@ -129,17 +133,45 @@ def update_profile_api(request: HttpRequest) -> JsonResponse:
 def update_password_api(request: HttpRequest) -> JsonResponse:
     try:
         data = json.loads(request.body)
-        user: CustomUser = request.user
-        if not user.check_password(data["oldPassword"]):
-            return JsonResponse({'success': False, "errors": {"oldPassword": ["Incorrect password"]}}, status=400)
-        if data["newPassword"] != data["confirmPassword"]:
-            return JsonResponse({'success': False, "errors": {"confirmPassword": ["Passwords do not match"]}}, status=400)
-        user.set_password(data["newPassword"])
+        user = request.user
+        
+        old_password = data.get('oldPassword')
+        new_password = data.get('newPassword')
+        confirm_password = data.get('confirmPassword')
+        
+        if not all([old_password, new_password, confirm_password]):
+            return JsonResponse({
+                'success': False,
+                'message': 'All password fields are required'
+            }, status=400)
+            
+        if new_password != confirm_password:
+            return JsonResponse({
+                'success': False,
+                'message': 'New passwords do not match'
+            }, status=400)
+            
+        if not user.check_password(old_password):
+            return JsonResponse({
+                'success': False,
+                'message': 'Current password is incorrect'
+            }, status=400)
+            
+        user.set_password(new_password)
         user.save()
+        
         update_session_auth_hash(request, user)
-        return JsonResponse({'success': True, "message": "Password updated successfully."})
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Password updated successfully'
+        })
+        
     except Exception as e:
-        return JsonResponse({'success': False, "errors": str(e)}, status=400)
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
 
 
 # Fetch all hobbies
@@ -183,9 +215,11 @@ def add_hobby(request):
             return JsonResponse({"success": False, "message": str(e)}, status=400)
     return JsonResponse({"success": False, "message": "Invalid Request."}, status=405)
 
+
 class HobbyDict(TypedDict):
     id: int
     name: str
+
 
 @csrf_exempt
 def signup(request):
@@ -441,14 +475,3 @@ def user_logout(request: HttpRequest) -> JsonResponse:
         "success": False,
         "message": "Invalid request method"
     }, status=405)
-
-@require_http_methods(['GET'])
-def user(request):
-    print(request.user)
-    if request.user.is_authenticated:
-        return JsonResponse(
-            {'email': request.user.email}
-        )
-    return JsonResponse(
-        {'message': 'Not logged in'}, status=401
-    )

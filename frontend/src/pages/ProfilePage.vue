@@ -566,8 +566,18 @@ const submitUpdateProfile = async (): Promise<void> => {
 
 const submitUpdatePassword = async (): Promise<void> => {
   try {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error("New passwords do not match")
+      return
+    }
+
+    if (passwordData.newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters long")
+      return
+    }
+
     const csrfToken = await authStore.setCsrfToken()
-    const response = await fetch("http://localhost:8000/api/profile/password/", {
+    const response = await fetch("http://localhost:8000/api/profile/password/update/", {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -576,7 +586,9 @@ const submitUpdatePassword = async (): Promise<void> => {
       body: JSON.stringify(passwordData),
       credentials: 'include'
     })
+
     const result = await response.json()
+    
     if (result.success) {
       toast.success(result.message)
       passwordData.oldPassword = ""
@@ -586,6 +598,7 @@ const submitUpdatePassword = async (): Promise<void> => {
       toast.error(result.message)
     }
   } catch (error) {
+    console.error('Password update error:', error)
     toast.error("Failed to update password")
   }
 }
