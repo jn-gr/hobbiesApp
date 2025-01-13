@@ -8,7 +8,7 @@ from django.contrib.auth import update_session_auth_hash, login, logout, authent
 from .models import CustomUser, Hobby
 import json
 from django.db.models import Count, Q
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from django.shortcuts import get_object_or_404
 from .models import FriendRequest
 from typing import List, TypedDict
@@ -33,7 +33,6 @@ def profile_api(request: HttpRequest) -> JsonResponse:
     if request.method == "GET":
         user: CustomUser = request.user
         data: Dict[str, Any] = {
-            "id": user.id,
             "name": user.name,
             "email": user.email,
             "date_of_birth": user.date_of_birth.isoformat() if user.date_of_birth else "",
@@ -187,6 +186,7 @@ def signup(request):
             name: str = data.get('name')
             email: str = data.get('email')
             password: str = data.get('password')
+            date_of_birth: str = data.get('date_of_birth')
             hobbies: List[HobbyDict] = data.get('hobbies', [])
             hobby_names: List[str] = [hobby.get('name') for hobby in hobbies]
             
@@ -208,14 +208,24 @@ def signup(request):
                     "message": "Email already in use."
                 }, status=400)
             
-            # Create user
+            # Parse date_of_birth if provided
+            parsed_date = None
+            if date_of_birth:
+                try:
+                    parsed_date = datetime.strptime(date_of_birth, '%Y-%m-%d').date()
+                except ValueError:
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'Invalid date format. Please use YYYY-MM-DD'
+                    }, status=400)
+            
             user = CustomUser.objects.create_user(
                 email=email,
                 name=name,
-                password=password
+                password=password,
+                date_of_birth=parsed_date
             )
-            
-            # Add hobbies
+
             for hobby_name in hobby_names:
                 hobby_name = hobby_name.strip()
                 if hobby_name:
@@ -223,7 +233,7 @@ def signup(request):
                     user.hobbies.add(hobby)
             
             login(request, user)
-            # Return user data like in login
+
             user_data = {
                 "id": user.id,
                 "name": user.name,

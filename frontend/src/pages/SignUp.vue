@@ -45,6 +45,17 @@
           </div>
 
           <div class="space-y-2">
+            <Label for="dob">Date of Birth</Label>
+            <Input
+              id="dob"
+              type="date"
+              v-model="formData.date_of_birth"
+              :max="getCurrentDate()"
+              required
+            />
+          </div>
+
+          <div class="space-y-2">
             <Label>Hobbies</Label>
             <div class="flex flex-wrap gap-2 mb-2">
               <div 
@@ -57,7 +68,7 @@
                   @click="removeHobby(hobby)" 
                   class="hover:text-destructive"
                 >
-                  ×
+                  x
                 </button>
               </div>
             </div>
@@ -101,8 +112,13 @@
             </div>
           </div>
 
-          <Button type="submit" class="w-full">
-            Create Account
+          <Button type="submit" class="w-full" :disabled="isLoading">
+            <div v-if="isLoading">
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            </div>
+            <div v-else>
+              Create Account
+            </div>
           </Button>
 
           <p class="text-center text-sm text-muted-foreground">
@@ -130,6 +146,22 @@
 .fade-leave-to {
   opacity: 0;
 }
+
+.spinner-border {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 0.1em solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spinner-border 0.75s linear infinite;
+}
+
+@keyframes spinner-border {
+  100% {
+    transform: rotate(360deg);
+  }
+}
 </style>
 
 <script setup lang="ts">
@@ -148,7 +180,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { toast } from 'sonner'
+import { toast } from 'vue-sonner'
 
 interface Hobby {
   id: number
@@ -159,6 +191,7 @@ interface FormData {
   name: string
   email: string
   password: string
+  date_of_birth: string
 }
 
 const router = useRouter()
@@ -168,11 +201,13 @@ const formData = ref<FormData>({
   name: "",
   email: "",
   password: "",
+  date_of_birth: "",
 })
 const selectedHobbies = ref<Hobby[]>([])
 const availableHobbies = ref<Hobby[]>([])
 const newHobby = ref("")
 const selectedHobbyId = ref("")
+const isLoading = ref(false)
 
 const fetchAvailableHobbies = async () => {
   try {
@@ -188,6 +223,7 @@ const fetchAvailableHobbies = async () => {
 }
 
 const handleSignup = async () => {
+  isLoading.value = true
   try {
     const csrfToken = await authStore.setCsrfToken()
     
@@ -202,6 +238,7 @@ const handleSignup = async () => {
         name: formData.value.name,
         email: formData.value.email,
         password: formData.value.password,
+        date_of_birth: formData.value.date_of_birth,
         hobbies: selectedHobbies.value,
       }),
     })
@@ -210,12 +247,14 @@ const handleSignup = async () => {
 
     if (data.success) {
       toast.success(data.message)
-      await router.push("/login")
+      await router.push("/profile")
     } else {
       toast.error(data.message || "Signup failed.")
     }
   } catch (error) {
     toast.error("An error occurred during signup.")
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -259,6 +298,10 @@ const addNewHobby = async () => {
 
 const removeHobby = (hobby: Hobby) => {
   selectedHobbies.value = selectedHobbies.value.filter(h => h.id !== hobby.id)
+}
+
+const getCurrentDate = () => {
+  return new Date().toISOString().split('T')[0]
 }
 
 onMounted(async () => {
