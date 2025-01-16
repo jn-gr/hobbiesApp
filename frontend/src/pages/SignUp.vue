@@ -12,7 +12,7 @@
           <div class="space-y-2">
             <Label for="name">Full Name</Label>
             <Input 
-              id="name" 
+              id="name"
               v-model="formData.name" 
               placeholder="Enter your name"
               class="w-full"

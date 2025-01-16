@@ -161,17 +161,18 @@ onMounted(async () => {
     </div>
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <Card v-for="user in users" :key="user.id" class="relative">
+      <Card v-for="user in users" :key="user.id" class="relative" id="filteredUsers">
         <Button
           v-if="!user.isFriend && !user.requestSent"
           class="absolute top-4 right-4"
           variant="outline"
           size="sm"
           @click="sendFriendRequest(user.id)"
+          id="sendRequest"
         >
           <UserPlus />
         </Button>
-        <Button
+        <Button 
           v-else-if="user.requestSent"
           class="absolute top-4 right-4"
           variant="secondary"

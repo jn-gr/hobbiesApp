@@ -97,6 +97,7 @@
                         variant="outline" 
                         class="cursor-pointer hover:bg-secondary"
                         @click="showHobbyDialog = true"
+                        id="editHobby"
                       >
                         <Plus class="h-3 w-3 mr-1" />
                         Add Hobby
@@ -106,7 +107,7 @@
                 </div>
 
                 <div class="flex justify-end">
-                  <Button type="submit" class="w-full md:w-auto">
+                  <Button type="submit" class="w-full md:w-auto" id="saveChanges">
                     Save Changes
                   </Button>
                 </div>
@@ -218,6 +219,7 @@
                       v-for="request in receivedRequests" 
                       :key="request.id"
                       class="flex items-center gap-3 p-2 rounded-lg bg-secondary/50"
+                      id="receivedRequests"
                     >
                       <img
                         :src="getAvatarUrl(request.from_user || '')"
@@ -232,6 +234,7 @@
                           size="sm" 
                           variant="default"
                           @click="handleFriendRequest(request.id, 'accept')"
+                          id="accept"
                         >
                           Accept
                         </Button>
@@ -239,6 +242,7 @@
                           size="sm" 
                           variant="outline"
                           @click="handleFriendRequest(request.id, 'reject')"
+                          id="reject"
                         >
                           Reject
                         </Button>
