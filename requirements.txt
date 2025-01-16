@@ -8,3 +8,4 @@ whitenoise==6.7.0
 django-cors-headers
 selenium
 Faker
+db-sqlite3
