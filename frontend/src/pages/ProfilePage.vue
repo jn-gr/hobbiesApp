@@ -488,6 +488,7 @@ const fetchHobbies = async (): Promise<void> => {
   } catch (error) {
     toast.error("Failed to fetch hobbies")
   }
+  console.log("hi")
 }
 
 const fetchUserProfile = async (): Promise<void> => {
