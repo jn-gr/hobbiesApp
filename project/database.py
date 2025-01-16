@@ -27,6 +27,6 @@ def config():
         'HOST': os.getenv('{}_SERVICE_HOST'.format(service_name)),
         'PORT': os.getenv('{}_SERVICE_PORT'.format(service_name)),
         'TEST': {
-            'NAME': 'YOURMUM',
+            'NAME': 'test_yourmum',
         }
     }
