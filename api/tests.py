@@ -19,7 +19,6 @@ class UserFlowTest(ChannelsLiveServerTestCase):
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--window-size=1920,1080')
 
-        cls.driver = webdriver.Chrome(executable_path="/opt/app-root/src/chromedriver", options=options)
         cls.driver = webdriver.Chrome(options=options)
         cls.hobbies_pool = [
             "Reading", "Cooking", "Traveling", "Gaming", "Hiking", 
