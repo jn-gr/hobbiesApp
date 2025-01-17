@@ -14,7 +14,12 @@ class UserFlowTest(ChannelsLiveServerTestCase):
         super().setUpClass()
         cls.fake = Faker()
         options = webdriver.ChromeOptions()
-        options.add_argument('--start-maximized')
+        options.add_argument('--headless')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--window-size=1920,1080')
+
+        cls.driver = webdriver.Chrome(executable_path="/opt/app-root/src/chromedriver", options=options)
         cls.driver = webdriver.Chrome(options=options)
         cls.hobbies_pool = [
             "Reading", "Cooking", "Traveling", "Gaming", "Hiking", 
