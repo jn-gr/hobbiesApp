@@ -15,13 +15,14 @@ Including another URLconf
 """
 from django.conf import settings
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
 from django.http import HttpResponse
-
+from api.views import main_spa
 
 urlpatterns = [
-    path('', include('api.urls')),
+    path('', main_spa),
     path('health', lambda request: HttpResponse("OK")),
     path('admin/', admin.site.urls),
-    path('api/', include('api.urls'))
+    path('api/', include('api.urls')),
+    re_path(r'^.*$', main_spa),
 ]

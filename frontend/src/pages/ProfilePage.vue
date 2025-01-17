@@ -163,7 +163,7 @@
                 </div>
 
                 <div class="flex justify-end">
-                  <Button type="submit">
+                  <Button type="submit" id="updatePassword">
                     Update Password
                   </Button>
                 </div>
@@ -599,6 +599,8 @@ const submitUpdatePassword = async (): Promise<void> => {
       body: JSON.stringify(passwordData),
       credentials: 'include'
     })
+
+    toast.success("Password updated")
 
     const result = await response.json()
     
