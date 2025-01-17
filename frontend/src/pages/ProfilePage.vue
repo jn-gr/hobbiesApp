@@ -478,7 +478,7 @@ const passwordData = reactive({
 const fetchHobbies = async (): Promise<void> => {
   try {
     const csrfToken = await authStore.setCsrfToken()
-    const response = await fetch("https://group39-ec22572.apps.a.comp-teach.qmul.ac.uk/api/hobbies/", {
+    const response = await fetch("https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/hobbies/", {
       credentials: 'include',
       headers: {
         'X-CSRFToken': csrfToken
@@ -498,7 +498,7 @@ const fetchHobbies = async (): Promise<void> => {
 const fetchUserProfile = async (): Promise<void> => {
   try {
     const csrfToken = await authStore.setCsrfToken()
-    const response = await fetch("https://group39-ec22572.apps.a.comp-teach.qmul.ac.uk/api/profile/", {
+    const response = await fetch("https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/profile/", {
       credentials: 'include',
       headers: {
         'X-CSRFToken': csrfToken
@@ -549,7 +549,7 @@ const submitUpdateProfile = async (): Promise<void> => {
     }
     
     const csrfToken = await authStore.setCsrfToken()
-    const response = await fetch("https://group39-ec22572.apps.a.comp-teach.qmul.ac.uk/api/profile/update/", {
+    const response = await fetch("https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/profile/update/", {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -588,7 +588,7 @@ const submitUpdatePassword = async (): Promise<void> => {
     }
 
     const csrfToken = await authStore.setCsrfToken()
-    const response = await fetch("https://group39-ec22572.apps.a.comp-teach.qmul.ac.uk/api/profile/password/update/", {
+    const response = await fetch("https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/profile/password/update/", {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -639,7 +639,7 @@ const addNewHobby = async () => {
   if (hobbyName && !formData.hobbies.some(h => h.name.toLowerCase() === hobbyName.toLowerCase())) {
     try {
       const csrfToken = await authStore.setCsrfToken()
-      const response = await fetch("https://group39-ec22572.apps.a.comp-teach.qmul.ac.uk/api/hobbies/", {
+      const response = await fetch("https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/hobbies/", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -675,7 +675,7 @@ const fetchFriendRequests = async () => {
   try {
     const csrfToken = await authStore.setCsrfToken()
     
-    const sentResponse = await fetch('https://group39-ec22572.apps.a.comp-teach.qmul.ac.uk/api/friend_requests/sent/', {
+    const sentResponse = await fetch('https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/friend_requests/sent/', {
       credentials: 'include',
       headers: {
         'X-CSRFToken': csrfToken
@@ -686,7 +686,7 @@ const fetchFriendRequests = async () => {
       sentRequests.value = data.sent_requests
     }
 
-    const receivedResponse = await fetch('https://group39-ec22572.apps.a.comp-teach.qmul.ac.uk/api/friend_requests/received/', {
+    const receivedResponse = await fetch('https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/friend_requests/received/', {
       credentials: 'include',
       headers: {
         'X-CSRFToken': csrfToken
@@ -704,7 +704,7 @@ const fetchFriendRequests = async () => {
 const fetchFriends = async () => {
   try {
     const csrfToken = await authStore.setCsrfToken()
-    const response = await fetch('https://group39-ec22572.apps.a.comp-teach.qmul.ac.uk/api/friends/', {
+    const response = await fetch('https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/friends/', {
       credentials: 'include',
       headers: {
         'X-CSRFToken': csrfToken
@@ -722,7 +722,7 @@ const fetchFriends = async () => {
 const handleFriendRequest = async (requestId: number, action: 'accept' | 'reject') => {
   try {
     const csrfToken = await authStore.setCsrfToken()
-    const response = await fetch(`https://group39-ec22572.apps.a.comp-teach.qmul.ac.uk/api/friend_requests/${action}/${requestId}/`, {
+    const response = await fetch(`https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/friend_requests/${action}/${requestId}/`, {
       method: 'POST',
       credentials: 'include',
       headers: {

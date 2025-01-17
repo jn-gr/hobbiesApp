@@ -123,10 +123,10 @@ USE_TZ = True
  
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    'https://group39-ec22572.apps.a.comp-teach.qmul.ac.uk',
+    'https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk',
 ]
 CSRF_TRUSTED_ORIGINS = [
-    'https://group39-ec22572.apps.a.comp-teach.qmul.ac.uk',
+    'https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk',
 ]
  
 # Static files (CSS, JavaScript, Images)
@@ -145,11 +145,11 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 INTERNAL_IPS = ['127.0.0.1']
  
 CORS_TRUSTED_ORIGINS = [
-    'https://group39-ec22572.apps.a.comp-teach.qmul.ac.uk',
+    'https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk',
 ]
  
 CORS_ALLOWED_ORIGINS = [
-    'https://group39-ec22572.apps.a.comp-teach.qmul.ac.uk',
+    'https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk',
 ]
 CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
 CORS_ALLOW_CREDENTIALS = True
