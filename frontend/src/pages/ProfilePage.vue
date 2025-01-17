@@ -97,7 +97,6 @@
                         variant="outline" 
                         class="cursor-pointer hover:bg-secondary"
                         @click="showHobbyDialog = true"
-                        id="editHobby"
                       >
                         <Plus class="h-3 w-3 mr-1" />
                         Add Hobby
@@ -107,7 +106,7 @@
                 </div>
 
                 <div class="flex justify-end">
-                  <Button type="submit" class="w-full md:w-auto" id="saveChanges">
+                  <Button type="submit" class="w-full md:w-auto">
                     Save Changes
                   </Button>
                 </div>
@@ -219,7 +218,6 @@
                       v-for="request in receivedRequests" 
                       :key="request.id"
                       class="flex items-center gap-3 p-2 rounded-lg bg-secondary/50"
-                      id="receivedRequests"
                     >
                       <img
                         :src="getAvatarUrl(request.from_user || '')"
@@ -234,7 +232,6 @@
                           size="sm" 
                           variant="default"
                           @click="handleFriendRequest(request.id, 'accept')"
-                          id="accept"
                         >
                           Accept
                         </Button>
@@ -242,7 +239,6 @@
                           size="sm" 
                           variant="outline"
                           @click="handleFriendRequest(request.id, 'reject')"
-                          id="reject"
                         >
                           Reject
                         </Button>
@@ -478,7 +474,7 @@ const passwordData = reactive({
 const fetchHobbies = async (): Promise<void> => {
   try {
     const csrfToken = await authStore.setCsrfToken()
-    const response = await fetch("https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/hobbies/", {
+    const response = await fetch("http://localhost:8000/api/hobbies/", {
       credentials: 'include',
       headers: {
         'X-CSRFToken': csrfToken
@@ -498,7 +494,7 @@ const fetchHobbies = async (): Promise<void> => {
 const fetchUserProfile = async (): Promise<void> => {
   try {
     const csrfToken = await authStore.setCsrfToken()
-    const response = await fetch("https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/profile/", {
+    const response = await fetch("http://localhost:8000/api/profile/", {
       credentials: 'include',
       headers: {
         'X-CSRFToken': csrfToken
@@ -549,7 +545,7 @@ const submitUpdateProfile = async (): Promise<void> => {
     }
     
     const csrfToken = await authStore.setCsrfToken()
-    const response = await fetch("https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/profile/update/", {
+    const response = await fetch("http://localhost:8000/api/profile/update/", {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -588,7 +584,7 @@ const submitUpdatePassword = async (): Promise<void> => {
     }
 
     const csrfToken = await authStore.setCsrfToken()
-    const response = await fetch("https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/profile/password/update/", {
+    const response = await fetch("http://localhost:8000/api/profile/password/update/", {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -639,7 +635,7 @@ const addNewHobby = async () => {
   if (hobbyName && !formData.hobbies.some(h => h.name.toLowerCase() === hobbyName.toLowerCase())) {
     try {
       const csrfToken = await authStore.setCsrfToken()
-      const response = await fetch("https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/hobbies/", {
+      const response = await fetch("http://localhost:8000/api/hobbies/", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -675,7 +671,7 @@ const fetchFriendRequests = async () => {
   try {
     const csrfToken = await authStore.setCsrfToken()
     
-    const sentResponse = await fetch('https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/friend_requests/sent/', {
+    const sentResponse = await fetch('http://localhost:8000/api/friend_requests/sent/', {
       credentials: 'include',
       headers: {
         'X-CSRFToken': csrfToken
@@ -686,7 +682,7 @@ const fetchFriendRequests = async () => {
       sentRequests.value = data.sent_requests
     }
 
-    const receivedResponse = await fetch('https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/friend_requests/received/', {
+    const receivedResponse = await fetch('http://localhost:8000/api/friend_requests/received/', {
       credentials: 'include',
       headers: {
         'X-CSRFToken': csrfToken
@@ -704,7 +700,7 @@ const fetchFriendRequests = async () => {
 const fetchFriends = async () => {
   try {
     const csrfToken = await authStore.setCsrfToken()
-    const response = await fetch('https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/friends/', {
+    const response = await fetch('http://localhost:8000/api/friends/', {
       credentials: 'include',
       headers: {
         'X-CSRFToken': csrfToken
@@ -722,7 +718,7 @@ const fetchFriends = async () => {
 const handleFriendRequest = async (requestId: number, action: 'accept' | 'reject') => {
   try {
     const csrfToken = await authStore.setCsrfToken()
-    const response = await fetch(`https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/friend_requests/${action}/${requestId}/`, {
+    const response = await fetch(`http://localhost:8000/api/friend_requests/${action}/${requestId}/`, {
       method: 'POST',
       credentials: 'include',
       headers: {
