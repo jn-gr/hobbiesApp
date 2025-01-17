@@ -1,123 +1,3 @@
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { UserPlus, Compass } from 'lucide-vue-next'
-import { useRoute, useRouter } from 'vue-router'
-import { toast } from 'vue-sonner'
-import { useAuthStore } from '../stores/auth'
-
-interface User {
-  id: number
-  name: string
-  common_hobbies: number
-  age: number | null
-  isFriend: boolean
-  requestSent: boolean
-}
-
-const route = useRoute()
-const router = useRouter()
-const users = ref<User[]>([])
-const totalPages = ref(0)
-const currentPage = ref(1)
-const ageMin = ref('')
-const ageMax = ref('')
-const isLoading = ref(false)
-const authStore = useAuthStore()
-
-onMounted(() => {
-  const { page, age_min, age_max } = route.query
-  currentPage.value = Number(page) || 1
-  ageMin.value = String(age_min || '')
-  ageMax.value = String(age_max || '')
-  fetchUsers()
-})
-
-const fetchUsers = async () => {
-  try {
-    isLoading.value = true
-    const params = new URLSearchParams({
-      page: String(currentPage.value)
-    })
-    
-    if (ageMin.value) params.append('age_min', ageMin.value)
-    if (ageMax.value) params.append('age_max', ageMax.value)
-    
-    const csrfToken = await authStore.setCsrfToken()
-    const response = await fetch(`https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/similar_users/?${params}`, {
-      credentials: 'include',
-      headers: {
-        'X-CSRFToken': csrfToken
-      }
-    })
-    
-    if (response.ok) {
-      const data = await response.json()
-      users.value = data.users
-      totalPages.value = Math.ceil(data.total_count / 9)
-
-      router.push({
-        query: {
-          ...(currentPage.value > 1 && { page: currentPage.value }),
-          ...(ageMin.value && { age_min: ageMin.value }),
-          ...(ageMax.value && { age_max: ageMax.value })
-        }
-      })
-    } else {
-      console.error('Failed response:', await response.text())
-    }
-  } catch (error) {
-    console.error('Failed to fetch users:', error)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const applyFilters = () => {
-  currentPage.value = 1 
-  fetchUsers()
-}
-
-const goToPage = (page: number) => {
-  currentPage.value = page
-  fetchUsers()
-}
-
-const getAvatarUrl = (name: string) => {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
-}
-
-const sendFriendRequest = async (userId: number) => {
-  try {
-    const csrfToken = await authStore.setCsrfToken()
-    const response = await fetch(`https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/friend_requests/send/${userId}/`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'X-CSRFToken': csrfToken
-      }
-    })
-    
-    if (response.ok) {
-      toast.success('Friend request sent!')
-      await fetchUsers()
-    } else {
-      const data = await response.json()
-      toast.error(data.error || 'Failed to send friend request')
-    }
-  } catch (error) {
-    toast.error('Failed to send friend request')
-  }
-}
-
-onMounted(async () => {
-  await fetchUsers()
-})
-</script>
-
 <template>
   <div class="container mx-auto p-8">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 space-y-6 md:space-y-0">
@@ -248,3 +128,123 @@ onMounted(async () => {
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { UserPlus, Compass } from 'lucide-vue-next'
+import { useRoute, useRouter } from 'vue-router'
+import { toast } from 'vue-sonner'
+import { useAuthStore } from '../stores/auth'
+
+interface User {
+  id: number
+  name: string
+  common_hobbies: number
+  age: number | null
+  isFriend: boolean
+  requestSent: boolean
+}
+
+const route = useRoute()
+const router = useRouter()
+const users = ref<User[]>([])
+const totalPages = ref(0)
+const currentPage = ref(1)
+const ageMin = ref('')
+const ageMax = ref('')
+const isLoading = ref(false)
+const authStore = useAuthStore()
+
+onMounted(() => {
+  const { page, age_min, age_max } = route.query
+  currentPage.value = Number(page) || 1
+  ageMin.value = String(age_min || '')
+  ageMax.value = String(age_max || '')
+  fetchUsers()
+})
+
+const fetchUsers = async () => {
+  try {
+    isLoading.value = true
+    const params = new URLSearchParams({
+      page: String(currentPage.value)
+    })
+    
+    if (ageMin.value) params.append('age_min', ageMin.value)
+    if (ageMax.value) params.append('age_max', ageMax.value)
+    
+    const csrfToken = await authStore.setCsrfToken()
+    const response = await fetch(`https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/similar_users/?${params}`, {
+      credentials: 'include',
+      headers: {
+        'X-CSRFToken': csrfToken
+      }
+    })
+    
+    if (response.ok) {
+      const data = await response.json()
+      users.value = data.users
+      totalPages.value = Math.ceil(data.total_count / 9)
+
+      router.push({
+        query: {
+          ...(currentPage.value > 1 && { page: currentPage.value }),
+          ...(ageMin.value && { age_min: ageMin.value }),
+          ...(ageMax.value && { age_max: ageMax.value })
+        }
+      })
+    } else {
+      console.error('Failed response:', await response.text())
+    }
+  } catch (error) {
+    console.error('Failed to fetch users:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const applyFilters = () => {
+  currentPage.value = 1 
+  fetchUsers()
+}
+
+const goToPage = (page: number) => {
+  currentPage.value = page
+  fetchUsers()
+}
+
+const getAvatarUrl = (name: string) => {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
+}
+
+const sendFriendRequest = async (userId: number) => {
+  try {
+    const csrfToken = await authStore.setCsrfToken()
+    const response = await fetch(`https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/friend_requests/send/${userId}/`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'X-CSRFToken': csrfToken
+      }
+    })
+    
+    if (response.ok) {
+      toast.success('Friend request sent!')
+      await fetchUsers()
+    } else {
+      const data = await response.json()
+      toast.error(data.error || 'Failed to send friend request')
+    }
+  } catch (error) {
+    toast.error('Failed to send friend request')
+  }
+}
+
+onMounted(async () => {
+  await fetchUsers()
+})
+</script>
