@@ -14,6 +14,7 @@
                   ? 'bg-accent text-black' 
                   : 'text-muted-foreground'
               ]"
+              :id="item.id"
             >
               <component :is="item.icon" class="h-5 w-5" />
               {{ item.label }}
@@ -88,6 +89,7 @@
                         <button 
                           @click="removeHobby(hobby)" 
                           class="hover:text-destructive ml-1"
+                          id = "removeHobby"
                           type="button"
                         >
                           <X class="h-3 w-3" />
