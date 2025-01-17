@@ -8,8 +8,7 @@
 
 - Misha Gusev
 
-  ##URL of deployed application:
-  https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/
+URL of deployed application: https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/
 
   ## Admin account details:
   - Email: admin@admin.com
