@@ -7,7 +7,7 @@
   I was assigned to help develop hobbies, friends backend and testing and I did deliver on that assignment.
 ### Noah Gomes
   I was assigned to help develop hobbies, friends backend and frontend on all aspects and deploy on openshift and I did deliver on that assignment.
-### Misha Gusev
+### Mikhail Gusev
   I was assigned to help develop user signup and signin and base frontend for them and i did deliver on that assignment.
 
 ## Deployment
