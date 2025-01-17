@@ -14,11 +14,7 @@ class UserFlowTest(LiveServerTestCase):
         super().setUpClass()
         cls.fake = Faker()
         options = webdriver.ChromeOptions()
-        options.add_argument('--headless')  # Run browser in headless mode
-        options.add_argument('--no-sandbox')  # Required for OpenShift
-        options.add_argument('--disable-dev-shm-usage')  # Prevent crashes in resource-limited environments
-        options.add_argument('--disable-gpu')  # Disable GPU acceleration
-        options.add_argument('--start-maximized')  # Optional
+        options.add_argument('--start-maximized')
         cls.driver = webdriver.Chrome(options=options)
         cls.hobbies_pool = ["Reading", "Cooking", "Traveling", "Gaming", "Hiking", "Photography", "Painting", "Music", "Gardening", "Cycling"]
 
