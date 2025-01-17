@@ -33,7 +33,7 @@ export const useAuthStore = defineStore('auth', {
         async setCsrfToken(): Promise<string> {
             try {
                 console.log('Setting CSRF token...')
-                const response = await fetch('http://localhost:8000/api/set-csrf-token/', {
+                const response = await fetch('https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/set-csrf-token/', {
                     method: 'GET',
                     credentials: 'include',
                     headers: {
@@ -66,7 +66,7 @@ export const useAuthStore = defineStore('auth', {
                 console.log('Attempting login for email:', email)
                 const csrfToken = await this.setCsrfToken()
                 
-                const response = await fetch('http://localhost:8000/api/login/', {
+                const response = await fetch('https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/login/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -112,7 +112,7 @@ export const useAuthStore = defineStore('auth', {
             console.log('Attempting logout')
             try {
                 const csrfToken = await this.setCsrfToken()
-                const response = await fetch('http://localhost:8000/api/logout/', {
+                const response = await fetch('https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/logout/', {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': csrfToken
@@ -137,7 +137,7 @@ export const useAuthStore = defineStore('auth', {
 
         async fetchUser() {
             try {
-                const response = await fetch('http://localhost:8000/api/profile/', {
+                const response = await fetch('https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/api/profile/', {
                     credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
