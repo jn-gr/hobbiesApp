@@ -1,59 +1,43 @@
-# Template for ECS639U Group Coursework
+# Group 39 Web Programming CW
 
-This template should be used as the starting point for your group coursework in the module ECS639U Web Programming (at Queen Mary University of London). Use Git (github.qmul.ac.uk) to collaborate on the coursework with your group members. Module leader: Paulo Oliva <[p.oliva@qmul.ac.uk](mailto:p.oliva@qmul.ac.uk)>
+## Team Members
+### Jenish Gurung
+  I was assigned to help develop the backend models and create a base frontend for the profile page and deploy on openshift and I did deliver on that assignment.
+### Palash Gandhi
+  I was assigned to help develop hobbies, friends backend and testing and I did deliver on that assignment.
+### Noah Gomes
+  I was assigned to help develop hobbies, friends backend and frontend on all aspects and deploy on openshift and I did deliver on that assignment.
+### Misha Gusev
+  I was assigned to help develop user signup and signin and base frontend for them and i did deliver on that assignment.
 
-## Local development
+## Deployment
+URL of deployed application: https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/
 
-To run this project in your development machine, follow these steps:
+## Admin Account
+- Email: admin@admin.com
+- Password: admin
 
-1. Create and activate a conda environment
+## Test User Accounts
 
-2. Download this repo as a zip and add the files to your own private repo.
-
-3. Install Pyhton dependencies (main folder):
-
-    ```console
-    $ pip install -r requirements.txt
-    ```
-
-4. Create a development database:
-
-    ```console
-    $ python manage.py migrate
-    ```
-
-5. Install JavaScript dependencies (from 'frontend' folder):
-
-    ```console
-    $ npm install
-    ```
-
-6. If everything is alright, you should be able to start the Django development server from the main folder:
-
-    ```console
-    $ python manage.py runserver
-    ```
-
-7. and the Vue server from the 'frontend' sub-folder:
-
-    ```console
-    $ npm run dev
-    ```
-
-8. Open your browser and go to http://localhost:5173, you will be greeted with a template page.
-
-## OpenShift deployment
-
-Once your project is ready to be deployed you will need to 'build' the Vue app and place it in Django's static folder.
-
-1. The build command in package.json and the vite.config.ts files have already been modified so that when running 'npm run build' the generated JavaScript and CSS files will be placed in the mainapp static folder, and the index.html file will be placed in the templates folder:
-
-    ```console
-    $ npm run build
-    ```
-
-2. You should then follow the instruction on QM+ on how to deploy your app on EECS's OpenShift live server.
-
-## License
-
-This code is dedicated to the public domain to the maximum extent permitted by applicable law, pursuant to [CC0](http://creativecommons.org/publicdomain/zero/1.0/).
+| Name | Email | Password |
+|------|--------|----------|
+| Andrea Ayala | andrea.ayala@example.com | O&D0DmGaXjgG |
+| David Perkins | david.perkins@example.com | 4c50BC@fs#hx |
+| Sara Petersen | sara.petersen@example.com | _*RSPFAt#eO6 |
+| Erica Duran | erica.duran@example.com | 70oDI9zi_H6+ |
+| Sherry Brown | sherry.brown@example.com | _1b2K@IucOQ@ |
+| Danielle Gonzalez DDS | danielle.gonzalez.dds@example.com | )QrChHzF63zQ |
+| Mary Stout | mary.stout@example.com | nNg6%M+b9&7$ |
+| Veronica Nelson | veronica.nelson@example.com | a!7k8NiEmmXY |
+| Elizabeth Khan | elizabeth.khan@example.com | iuRGeqEG(1^I |
+| Jeremy Green | jeremy.green@example.com | 6H!j7OPqW&U0 |
+| Richard Castro | richard.castro@example.com | m*_6Yto%Xx7@ |
+| Sarah Hopkins | sarah.hopkins@example.com | 2!8JUttirT!j |
+| Stanley Wilson | stanley.wilson@example.com | *B5QUsaT4mRB |
+| Troy Banks | troy.banks@example.com | #9KRVy%B^5Sr |
+| Wayne Kelley | wayne.kelley@example.com | j&9_ZAk6Tesf |
+| Justin Rivera | justin.rivera@example.com | &$V@TfZXlgj3 |
+| Renee Murphy | renee.murphy@example.com | j9GJZKiR@CgA |
+| Nicolas Beard | nicolas.beard@example.com | *bYD1ZJb0_DN |
+| Danielle Bell | danielle.bell@example.com | $n$k90LftlJL |
+| Joanne Perry | joanne.perry@example.com | mJ5)IcCxo$2t |
