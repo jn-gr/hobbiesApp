@@ -173,6 +173,17 @@ const fetchUsers = async () => {
     const params = new URLSearchParams({
       page: String(currentPage.value)
     })
+
+    if (Number(ageMin.value) < 0) {
+      toast.error('Age must be greater than 0')
+      return
+    } 
+
+    if (Number(ageMax.value) < 0) {
+      toast.error('Age must be greater than 0')
+      return
+    } 
+    
     
     if (ageMin.value) params.append('age_min', ageMin.value)
     if (ageMax.value) params.append('age_max', ageMax.value)
