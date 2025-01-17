@@ -8,6 +8,10 @@ psycopg2-binary==2.9.9
 whitenoise==6.7.0
 django-cors-headers
 selenium
+<<<<<<< HEAD
 =======
 whitenoise==6.7.0
 >>>>>>> Stashed changes
+=======
+Faker
+>>>>>>> 4f4071e563519fa3b2cad1353ef1054b10f47488
