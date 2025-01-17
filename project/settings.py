@@ -124,11 +124,9 @@ USE_TZ = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:8000',
-    'http://127.0.0.1:8000',
 ]
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
-    'http://127.0.0.1:8000',
 ]
 
 # Static files (CSS, JavaScript, Images)
@@ -148,12 +146,10 @@ INTERNAL_IPS = ['127.0.0.1']
 
 CORS_TRUSTED_ORIGINS = [
     'http://localhost:8000',
-    'http://127.0.0.1:8000',
 ]
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:8000',
-    'http://127.0.0.1:8000',
 ]
 CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
 CORS_ALLOW_CREDENTIALS = True
