@@ -9,6 +9,7 @@ import json
 from faker import Faker
 
 class UserFlowTest(LiveServerTestCase):
+    port = 8000
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -43,7 +44,8 @@ class UserFlowTest(LiveServerTestCase):
             user = {"full_name": full_name, "email": email, "password": password}
             self.generated_users.append(user)
 
-            self.driver.get(f"{self.live_server_url}/signup")
+            self.driver.get(f"{self.live_server_url}/")
+            time.sleep(2)
             WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.ID, "name"))).send_keys(full_name)
             self.driver.find_element(By.ID, "email").send_keys(email)
             self.driver.find_element(By.ID, "password").send_keys(password)
