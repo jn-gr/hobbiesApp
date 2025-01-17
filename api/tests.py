@@ -1,4 +1,4 @@
-from django.test import LiveServerTestCase
+from channels.testing import ChannelsLiveServerTestCase
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -8,15 +8,22 @@ import time
 import json
 from faker import Faker
 
-class UserFlowTest(LiveServerTestCase):
+class UserFlowTest(ChannelsLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.fake = Faker()
         options = webdriver.ChromeOptions()
-        options.add_argument('--start-maximized')
+        options.add_argument('--headless')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--window-size=1920,1080')
+
         cls.driver = webdriver.Chrome(options=options)
-        cls.hobbies_pool = ["Reading", "Cooking", "Traveling", "Gaming", "Hiking", "Photography", "Painting", "Music", "Gardening", "Cycling"]
+        cls.hobbies_pool = [
+            "Reading", "Cooking", "Traveling", "Gaming", "Hiking", 
+            "Photography", "Painting", "Music", "Gardening", "Cycling"
+        ]
 
     @classmethod
     def tearDownClass(cls):
@@ -30,14 +37,11 @@ class UserFlowTest(LiveServerTestCase):
         return name.lower().replace(" ", ".") + "@example.com"
 
     def signup(self):
-        generated_users = []
         full_name = self.fake.name()
         email = self.generate_email(full_name)
         password = self.fake.password(length=10)
         dob = self.random_dob()
         hobbies = random.sample(self.hobbies_pool, k=random.randint(1, 10))
-
-        generated_users.append({"full_name": full_name, "email": email, "password": password})
 
         self.driver.get(f"{self.live_server_url}/signup")
         WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.ID, "name"))).send_keys(full_name)
@@ -61,8 +65,7 @@ class UserFlowTest(LiveServerTestCase):
         create_account_button.click()
         time.sleep(2)
 
-        with open("test_users.json", "w") as file:
-            json.dump(generated_users, file, indent=4)
+        return {"full_name": full_name, "email": email, "password": password}
 
     def login(self, email, password):
         self.driver.get(f"{self.live_server_url}/login")
@@ -72,30 +75,62 @@ class UserFlowTest(LiveServerTestCase):
         time.sleep(3)
 
     def test_user_flow(self):
-        self.signup()
-        with open("test_users.json", "r") as file:
-            users = json.load(file)
-        user = users[0]
+        # Step 1: Signup for two users
+        user1 = self.signup()
+        user2 = self.signup()
 
-        self.login(user['email'], user['password'])
-        time.sleep(3)  # Observe the login action
+        # Step 2: Save users to file
+        with open("test_users.json", "w") as file:
+            json.dump([user1, user2], file, indent=4)
 
+        # Step 3: Login as User 1
+        self.login(user1['email'], user1['password'])
+
+        # Step 4: Edit profile
         self.driver.get(f"{self.live_server_url}/profile")
         WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.ID, "editProfile"))).click()
-        time.sleep(3)  # Observe the profile editing
+        time.sleep(3)  # Observe profile editing
+        self.driver.find_element(By.ID, "bio").send_keys("This is an updated bio.")
+        self.driver.find_element(By.XPATH, "//button[text()='Save Changes']").click()
+        time.sleep(2)
 
+        # Step 5: Filter users by age
         min_age = random.randint(18, 50)
         max_age = random.randint(min_age + 1, 60)
-        self.driver.get(f"{self.live_server_url}/")
+        self.driver.get(f"{self.live_server_url}/users")
         WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "//input[@placeholder='Min']"))).send_keys(str(min_age))
         self.driver.find_element(By.XPATH, "//input[@placeholder='Max']").send_keys(str(max_age))
         self.driver.find_element(By.XPATH, "//button[text()='Apply Filters']").click()
-        time.sleep(3)  # Observe filtering
+        time.sleep(3)
 
-        self.driver.get(f"{self.live_server_url}/profile?tab=friends")
-        time.sleep(3)  # Observe friend requests
+        # Step 6: Send friend request to User 2
+        self.driver.get(f"{self.live_server_url}/users")
+        friend_request_button = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, f"//button[@data-email='{user2['email']}']"))
+        )
+        friend_request_button.click()
+        time.sleep(2)
 
+        # Step 7: Logout User 1
         self.driver.delete_all_cookies()
         self.driver.execute_script("window.localStorage.clear();")
         self.driver.execute_script("window.sessionStorage.clear();")
-        time.sleep(5)  # Observe completion
+        time.sleep(3)
+
+        # Step 8: Login as User 2
+        self.login(user2['email'], user2['password'])
+
+        # Step 9: Accept friend request
+        self.driver.get(f"{self.live_server_url}/profile?tab=friendRequests")
+        accept_button = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[text()='Accept']"))
+        )
+        accept_button.click()
+        time.sleep(2)
+
+        # Step 10: Verify friendship
+        self.driver.get(f"{self.live_server_url}/profile?tab=friends")
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, f"//div[text()='{user1['full_name']}']"))
+        )
+        time.sleep(3)
