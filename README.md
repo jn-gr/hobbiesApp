@@ -2,6 +2,7 @@
 
 ## Team Members
 - Jenish Gurung
+I was assigned to create the backend models and create a base frontend for the profile page and I did deliver on that assignment
 - Palash Gandhi
 - Noah Gomes
 - Misha Gusev
