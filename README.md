@@ -1,59 +1,118 @@
-# Template for ECS639U Group Coursework
+# Group 39 Web Programming CW
+## Members:
+- Jenish Gurung
 
-This template should be used as the starting point for your group coursework in the module ECS639U Web Programming (at Queen Mary University of London). Use Git (github.qmul.ac.uk) to collaborate on the coursework with your group members. Module leader: Paulo Oliva <[p.oliva@qmul.ac.uk](mailto:p.oliva@qmul.ac.uk)>
+- Palash Gandhi
 
-## Local development
+- Noah Gomes
 
-To run this project in your development machine, follow these steps:
+- Misha Gusev
 
-1. Create and activate a conda environment
+  ##URL of deployed application:
+  https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/
 
-2. Download this repo as a zip and add the files to your own private repo.
+  ## Admin account details:
+  - Email: admin@admin.com
+  - Password: admin
+ 
+  ## Accounts of test users on deployed application
 
-3. Install Pyhton dependencies (main folder):
-
-    ```console
-    $ pip install -r requirements.txt
-    ```
-
-4. Create a development database:
-
-    ```console
-    $ python manage.py migrate
-    ```
-
-5. Install JavaScript dependencies (from 'frontend' folder):
-
-    ```console
-    $ npm install
-    ```
-
-6. If everything is alright, you should be able to start the Django development server from the main folder:
-
-    ```console
-    $ python manage.py runserver
-    ```
-
-7. and the Vue server from the 'frontend' sub-folder:
-
-    ```console
-    $ npm run dev
-    ```
-
-8. Open your browser and go to http://localhost:5173, you will be greeted with a template page.
-
-## OpenShift deployment
-
-Once your project is ready to be deployed you will need to 'build' the Vue app and place it in Django's static folder.
-
-1. The build command in package.json and the vite.config.ts files have already been modified so that when running 'npm run build' the generated JavaScript and CSS files will be placed in the mainapp static folder, and the index.html file will be placed in the templates folder:
-
-    ```console
-    $ npm run build
-    ```
-
-2. You should then follow the instruction on QM+ on how to deploy your app on EECS's OpenShift live server.
-
-## License
-
-This code is dedicated to the public domain to the maximum extent permitted by applicable law, pursuant to [CC0](http://creativecommons.org/publicdomain/zero/1.0/).
+Name: Andrea Ayala
+Email: andrea.ayala@example.com
+Password: O&D0DmGaXjgG
+----------------------------------------
+Account 2:
+Name: David Perkins
+Email: david.perkins@example.com
+Password: 4c50BC@fs#hx
+----------------------------------------
+Account 3:
+Name: Sara Petersen
+Email: sara.petersen@example.com
+Password: _*RSPFAt#eO6
+----------------------------------------
+Account 4:
+Name: Erica Duran
+Email: erica.duran@example.com
+Password: 70oDI9zi_H6+
+----------------------------------------
+Account 5:
+Name: Sherry Brown
+Email: sherry.brown@example.com
+Password: _1b2K@IucOQ@
+----------------------------------------
+Account 6:
+Name: Danielle Gonzalez DDS
+Email: danielle.gonzalez.dds@example.com
+Password: )QrChHzF63zQ
+----------------------------------------
+Account 7:
+Name: Mary Stout
+Email: mary.stout@example.com
+Password: nNg6%M+b9&7$
+----------------------------------------
+Account 8:
+Name: Veronica Nelson
+Email: veronica.nelson@example.com
+Password: a!7k8NiEmmXY
+----------------------------------------
+Account 9:
+Name: Elizabeth Khan
+Email: elizabeth.khan@example.com
+Password: iuRGeqEG(1^I
+----------------------------------------
+Account 10:
+Name: Jeremy Green
+Email: jeremy.green@example.com
+Password: 6H!j7OPqW&U0
+----------------------------------------
+Account 11:
+Name: Richard Castro
+Email: richard.castro@example.com
+Password: m*_6Yto%Xx7@
+----------------------------------------
+Account 12:
+Name: Sarah Hopkins
+Email: sarah.hopkins@example.com
+Password: 2!8JUttirT!j
+----------------------------------------
+Account 13:
+Name: Stanley Wilson
+Email: stanley.wilson@example.com
+Password: *B5QUsaT4mRB
+----------------------------------------
+Account 14:
+Name: Troy Banks
+Email: troy.banks@example.com
+Password: #9KRVy%B^5Sr
+----------------------------------------
+Account 15:
+Name: Wayne Kelley
+Email: wayne.kelley@example.com
+Password: j&9_ZAk6Tesf
+----------------------------------------
+Account 16:
+Name: Justin Rivera
+Email: justin.rivera@example.com
+Password: &$V@TfZXlgj3
+----------------------------------------
+Account 17:
+Name: Renee Murphy
+Email: renee.murphy@example.com
+Password: j9GJZKiR@CgA
+----------------------------------------
+Account 18:
+Name: Nicolas Beard
+Email: nicolas.beard@example.com
+Password: *bYD1ZJb0_DN
+----------------------------------------
+Account 19:
+Name: Danielle Bell
+Email: danielle.bell@example.com
+Password: $n$k90LftlJL
+----------------------------------------
+Account 20:
+Name: Joanne Perry
+Email: joanne.perry@example.com
+Password: mJ5)IcCxo$2t
+----------------------------------------
