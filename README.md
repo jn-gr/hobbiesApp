@@ -10,11 +10,11 @@
 
 URL of deployed application: https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/
 
-  ## Admin account details:
+## Admin account details:
   - Email: admin@admin.com
   - Password: admin
  
-  ## Accounts of test users on deployed application
+## Accounts of test users on deployed application
 
 Name: Andrea Ayala
 Email: andrea.ayala@example.com
