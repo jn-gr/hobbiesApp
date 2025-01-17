@@ -11,7 +11,7 @@ engines = {
 
 
 def config():
-    service_name = 'hobbiesapp'
+    service_name = 'postgresql'
     if service_name:
         engine = engines.get(os.getenv('DATABASE_ENGINE'), engines['postgresql'])
     else:
@@ -22,9 +22,9 @@ def config():
 
     return {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.getenv('DATABASE_NAME', 'postgres'),
+        'NAME': os.getenv('DATABASE_NAME', 'default'),
         'USER': os.getenv('DATABASE_USER', 'django'),
         'PASSWORD': os.getenv('DATABASE_PASSWORD', 'asseater1'), 
-        'HOST': os.getenv('DATABASE_HOST', 'postgresql')
+        'HOST': os.getenv('DATABASE_HOST', 'postgresql'),
         'PORT': os.getenv('DATABASE_PORT', '5432'),
     }
