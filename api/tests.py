@@ -1,4 +1,4 @@
-from django.test import LiveServerTestCase, override_settings
+from django.test import LiveServerTestCase
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -8,22 +8,6 @@ import time
 import json
 from faker import Faker
 
-@override_settings(
-    DATABASES={
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': ':memory:',  # In-memory SQLite database for testing
-            'TEST': {
-                'SERIALIZE': False,
-                'NAME': None,
-            },
-            'OPTIONS': {
-                # This ensures compatibility with SQLite 2.26 by not using newer features
-                'timeout': 20,
-            },
-        }
-    }
-)
 class UserFlowTest(LiveServerTestCase):
     @classmethod
     def setUpClass(cls):
