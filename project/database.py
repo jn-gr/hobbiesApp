@@ -22,9 +22,9 @@ def config():
 
     return {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.getenv('DATABASE_NAME', 'postgres'),  # Change this to your actual DB name
-        'USER': os.getenv('DATABASE_USER', 'admin'),  # Change this to your actual DB user
-        'PASSWORD': os.getenv('DATABASE_PASSWORD', 'supersecurepassword'),  # Set via secrets
-        'HOST': os.getenv('DATABASE_HOST', 'postgresql'),  # This should match your OpenShift service name
+        'NAME': os.getenv('DATABASE_NAME', 'postgres'),
+        'USER': os.getenv('DATABASE_USER', 'django'),
+        'PASSWORD': os.getenv('DATABASE_PASSWORD', 'asseater1'), 
+        'HOST': os.getenv('DATABASE_HOST', 'postgresql')
         'PORT': os.getenv('DATABASE_PORT', '5432'),
     }
