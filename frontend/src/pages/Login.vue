@@ -59,6 +59,22 @@
 </template>
 
 <style scoped>
+.spinner-border {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 0.1em solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spinner-border 0.75s linear infinite;
+}
+
+@keyframes spinner-border {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;
@@ -114,21 +130,3 @@ const resetError = () => {
   error.value = '';
 };
 </script>
-
-<style scoped>
-.spinner-border {
-  display: inline-block;
-  width: 1rem;
-  height: 1rem;
-  border: 0.1em solid currentColor;
-  border-right-color: transparent;
-  border-radius: 50%;
-  animation: spinner-border 0.75s linear infinite;
-}
-
-@keyframes spinner-border {
-  100% {
-    transform: rotate(360deg);
-  }
-}
-</style>

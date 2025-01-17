@@ -211,7 +211,7 @@ const isLoading = ref(false)
 
 const fetchAvailableHobbies = async () => {
   try {
-    const response = await fetch("http://localhost:8000/api/hobbies/", {
+    const response = await fetch("http://127.0.0.1:8000/api/hobbies/", {
       credentials: 'include'
     })
     if (response.ok) {
@@ -227,7 +227,7 @@ const handleSignup = async () => {
   try {
     const csrfToken = await authStore.setCsrfToken()
     
-    const response = await fetch("http://localhost:8000/api/signup/", {
+    const response = await fetch("http://127.0.0.1:8000/api/signup/", {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -272,7 +272,7 @@ const addNewHobby = async () => {
     try {
       const csrfToken = await authStore.setCsrfToken()
       
-      const response = await fetch("http://localhost:8000/api/hobbies/", {
+      const response = await fetch("http://127.0.0.1:8000/api/hobbies/", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
