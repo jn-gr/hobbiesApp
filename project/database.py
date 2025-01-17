@@ -21,11 +21,11 @@ def config():
         name = os.path.join(settings.BASE_DIR, 'db.sqlite3')
     return {
         'ENGINE': engine,
-        'NAME': name,
-        'USER': os.getenv('DATABASE_USER'),
-        'PASSWORD': os.getenv('DATABASE_PASSWORD'),
-        'HOST': os.getenv('{}_SERVICE_HOST'.format(service_name)),
-        'PORT': os.getenv('{}_SERVICE_PORT'.format(service_name)),
+        'NAME': 'default',
+        'USER': 'django',
+        'PASSWORD': 'pxviFo8wxSTGstTq',
+        'PORT': '5432',
+        'HOST': '138.37.17.131',
         'TEST': {
             'NAME': 'test_yourmum',
         }
