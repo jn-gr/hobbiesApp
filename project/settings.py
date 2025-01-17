@@ -12,14 +12,12 @@ https://docs.djangoproject.com/en/stable/ref/settings/
  
 from . import database
 import os
-import sys
  
 from pathlib import Path
  
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
  
-TEST = 'test' in sys.argv
  
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/stable/howto/deployment/checklist/
