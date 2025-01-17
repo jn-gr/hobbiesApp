@@ -7,9 +7,6 @@ import random
 import time
 import json
 from faker import Faker
-import shutil
-print("Chromedriver path:", shutil.which("chromedriver"))
-
 
 class UserFlowTest(LiveServerTestCase):
     @classmethod
