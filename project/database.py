@@ -25,7 +25,7 @@ def config():
         'USER': 'django',
         'PASSWORD': 'pxviFo8wxSTGstTq',
         'PORT': '5432',
-        'HOST': '138.37.17.131',
+        'HOST': '10.137.255.43',
         'TEST': {
             'NAME': 'test_yourmum',
         }
