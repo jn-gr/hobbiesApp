@@ -47,7 +47,7 @@ const fetchUsers = async () => {
     if (ageMax.value) params.append('age_max', ageMax.value)
     
     const csrfToken = await authStore.setCsrfToken()
-    const response = await fetch(`http://localhost:8000/api/similar_users/?${params}`, {
+    const response = await fetch(`https://group39-ec22572.apps.a.comp-teach.qmul.ac.uk/api/similar_users/?${params}`, {
       credentials: 'include',
       headers: {
         'X-CSRFToken': csrfToken
@@ -93,7 +93,7 @@ const getAvatarUrl = (name: string) => {
 const sendFriendRequest = async (userId: number) => {
   try {
     const csrfToken = await authStore.setCsrfToken()
-    const response = await fetch(`http://localhost:8000/api/friend_requests/send/${userId}/`, {
+    const response = await fetch(`https://group39-ec22572.apps.a.comp-teach.qmul.ac.uk/api/friend_requests/send/${userId}/`, {
       method: 'POST',
       credentials: 'include',
       headers: {
