@@ -2,10 +2,13 @@
 
 ## Team Members
 - Jenish Gurung
-I was assigned to create the backend models and create a base frontend for the profile page and I did deliver on that assignment
+I was assigned to help develop the backend models and create a base frontend for the profile page and deploy on openshift and I did deliver on that assignment.
 - Palash Gandhi
+I was assigned to help develop hobbies, friends backend and testing and I did deliver on that assignment.
 - Noah Gomes
+I was assigned to help develop hobbies, friends backend and frontend on all aspects and deploy on openshift and I did deliver on that assignment.
 - Misha Gusev
+I was assigned to help develop user signup and signin and base frontend for them and i did deliver on that assignment.
 
 ## Deployment
 URL of deployed application: https://group39-web-apps-ec22572.apps.a.comp-teach.qmul.ac.uk/
