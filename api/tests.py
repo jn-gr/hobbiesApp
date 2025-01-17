@@ -15,6 +15,7 @@ class UserFlowTest(LiveServerTestCase):
         cls.fake = Faker()
         options = webdriver.ChromeOptions()
         options.add_argument('--start-maximized')
+        # options.add_argument('--headless')
         cls.driver = webdriver.Chrome(options=options)
         cls.hobbies_pool = ["Reading", "Cooking", "Traveling", "Gaming", "Hiking", "Photography", "Painting", "Music", "Gardening", "Cycling"]
 
@@ -78,9 +79,8 @@ class UserFlowTest(LiveServerTestCase):
         user1 = self.signup()
         user2 = self.signup()
 
-        # Step 2: Save users to file
-        with open("test_users.json", "w") as file:
-            json.dump([user1, user2], file, indent=4)
+        # Remove file writing - store in memory if needed
+        users_data = [user1, user2]
 
         # Step 3: Login as User 1
         self.login(user1['email'], user1['password'])
