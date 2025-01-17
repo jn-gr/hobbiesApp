@@ -1,4 +1,4 @@
-from channels.testing import ChannelsLiveServerTestCase
+from django.test import LiveServerTestCase
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -8,7 +8,7 @@ import time
 import json
 from faker import Faker
 
-class UserFlowTest(ChannelsLiveServerTestCase):
+class UserFlowTest(LiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -16,21 +16,22 @@ class UserFlowTest(ChannelsLiveServerTestCase):
         options = webdriver.ChromeOptions()
         options.add_argument('--start-maximized')
         cls.driver = webdriver.Chrome(options=options)
-        cls.hobbies_pool = [
-            "Reading", "Cooking", "Traveling", "Gaming", "Hiking", 
-            "Photography", "Painting", "Music", "Gardening", "Cycling"
-        ]
+        cls.hobbies_pool = ["Reading", "Cooking", "Traveling", "Gaming", "Hiking", "Photography", "Painting", "Music", "Gardening", "Cycling"]
+
 
     @classmethod
     def tearDownClass(cls):
         cls.driver.quit()
         super().tearDownClass()
 
+
     def random_dob(self):
         return self.fake.date_of_birth(minimum_age=18, maximum_age=60).strftime("%d/%m/%Y")
 
+
     def generate_email(self, name):
         return name.lower().replace(" ", ".") + "@example.com"
+
 
     def signup(self):
         full_name = self.fake.name()
@@ -63,12 +64,14 @@ class UserFlowTest(ChannelsLiveServerTestCase):
 
         return {"full_name": full_name, "email": email, "password": password}
 
+
     def login(self, email, password):
         self.driver.get(f"{self.live_server_url}/login")
         WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.ID, "email"))).send_keys(email)
         self.driver.find_element(By.ID, "password").send_keys(password)
         self.driver.find_element(By.XPATH, "//*[@id='app']/div/main/div/div/div[2]/form/button").click()
         time.sleep(3)
+
 
     def test_user_flow(self):
         # Step 1: Signup for two users
