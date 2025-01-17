@@ -3,11 +3,7 @@
     <header class="border-b">
       <div class="container flex h-14 items-center justify-between">
         <router-link to="/" class="flex items-center">
-          <img 
-            src="/logo.png" 
-            alt="Logo" 
-            class="h-12 w-auto"
-          />
+          <img src="/logo.png" alt="Logo" class="h-12 w-auto" />
         </router-link>
 
         <div class="flex items-center">
@@ -18,7 +14,7 @@
           >
             Login
           </router-link>
-          
+
           <DropdownMenu v-else>
             <DropdownMenuTrigger>
               <img
@@ -58,42 +54,45 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed } from 'vue';
-import { useAuthStore } from './stores/auth';
-import { useRouter } from 'vue-router';
-import { User, UserPlus, LogOut } from 'lucide-vue-next';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import { Toaster } from 'vue-sonner';
+  import { onMounted, computed } from 'vue'
+  import { useAuthStore } from './stores/auth'
+  import { useRouter } from 'vue-router'
+  import { User, UserPlus, LogOut } from 'lucide-vue-next'
+  import {
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator
+  } from '@/components/ui/dropdown-menu'
+  import { Toaster } from 'vue-sonner'
 
-const authStore = useAuthStore();
-const router = useRouter();
+  const authStore = useAuthStore()
+  const router = useRouter()
 
-const avatarUrl = computed(() => {
-  return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(authStore.user?.name || 'User') + '&background=random';
-});
+  const avatarUrl = computed(() => {
+    return (
+      'https://ui-avatars.com/api/?name=' +
+      encodeURIComponent(authStore.user?.name || 'User') +
+      '&background=random'
+    )
+  })
 
-const handleLogout = async () => {
-  try {
-    await authStore.logout(router);
-  } catch (error) {
-    console.error('Logout failed:', error);
+  const handleLogout = async () => {
+    try {
+      await authStore.logout(router)
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
   }
-};
 
-onMounted(async () => {
-  await authStore.fetchUser();
-  if (authStore.isAuthenticated && router.currentRoute.value.meta.requiresGuest) {
-    router.push('/profile');
-  }
-});
+  onMounted(async () => {
+    await authStore.fetchUser()
+    if (authStore.isAuthenticated && router.currentRoute.value.meta.requiresGuest) {
+      router.push('/profile')
+    }
+  })
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>
